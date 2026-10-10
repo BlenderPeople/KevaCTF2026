@@ -1,0 +1,5 @@
+3000 grafana
+3100 loki
+50505 clicker
+9090 prometheus
+9080 promtail

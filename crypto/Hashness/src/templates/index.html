@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hash check</title>
+    <style>
+      :root { color-scheme: light; --bg: #f4f4f2; --panel: #fff; --line: #d8d8d3; --text: #252525; --muted: #777; --accent: #252525; --good: #166534; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; color: var(--text); background: var(--bg); font: 16px/1.5 Arial, sans-serif; }
+      main { width: min(620px, 100%); }
+      h1 { margin: 0 0 24px; font-size: 30px; font-weight: 600; }
+      .card { padding: 26px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); box-shadow: 0 3px 14px #0000000b; }
+      label { display: block; margin-bottom: 8px; font-size: 14px; }
+      textarea { width: 100%; min-height: 105px; resize: vertical; padding: 12px; border: 1px solid var(--line); border-radius: 4px; outline: none; color: var(--text); background: #fff; font: 16px/1.45 Consolas, monospace; }
+      textarea:focus { border-color: #888; }
+      button { margin-top: 12px; padding: 10px 17px; border: 1px solid #111; border-radius: 4px; color: #fff; background: #292929; font-size: 15px; cursor: pointer; }
+      button:hover { background: #444; } button:disabled { opacity: .65; cursor: wait; }
+      .result { display: none; margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
+      .result.visible { display: block; }
+      .hash-row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+      .hash { color: #333; font: 700 34px/1 Consolas, monospace; letter-spacing: .06em; }
+      .decimal { color: var(--muted); font-size: 13px; }
+      .message { margin: 18px 0 0; padding: 10px 12px; border-radius: 4px; color: #555; background: #f3f3f0; }
+      .message.good { color: var(--good); border: 1px solid #9acaab; background: #edf8f0; }
+      .flag { margin-top: 12px; padding: 12px; overflow-wrap: anywhere; border: 1px solid #9acaab; border-radius: 4px; color: #124c29; background: #f3fbf5; font: 700 15px/1.45 Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Введи <code>flag</code>, чтобы получить флаг</h1>
+      <section class="card">
+        <form id="hash-form">
+          <label for="value">Твоя строка</label>
+          <textarea id="value" name="value" autofocus></textarea>
+          <button id="submit" type="submit">Проверить</button>
+        </form>
+        <div id="result" class="result" aria-live="polite">
+          <div class="hash-row"><div><div class="decimal">Хэш</div><div id="hash" class="hash">—</div></div><div id="decimal" class="decimal"></div></div>
+          <div id="message" class="message"></div>
+          <div id="flag" class="flag" hidden></div>
+        </div>
+      </section>
+    </main>
+    <script>
+      const form = document.querySelector('#hash-form');
+      const input = document.querySelector('#value');
+      const button = document.querySelector('#submit');
+      const result = document.querySelector('#result');
+      const hash = document.querySelector('#hash');
+      const decimal = document.querySelector('#decimal');
+      const message = document.querySelector('#message');
+      const flag = document.querySelector('#flag');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        button.disabled = true;
+        message.className = 'message';
+        flag.hidden = true;
+        try {
+          const response = await fetch('/api/hash', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({value: input.value})
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Ошибка запроса');
+          result.classList.add('visible');
+          hash.textContent = data.hash;
+          decimal.textContent = `decimal: ${data.decimal}`;
+          if (data.collision) {
+            message.textContent = 'Вот оно что, ну, держи, чемпион';
+            message.className = 'message good';
+            flag.textContent = data.flag;
+            flag.hidden = false;
+          } else if (input.value === 'flag') {
+            message.textContent = 'Хе-хе-хе, ты думал, что так просто получить флаг?';
+          } else {
+            message.textContent = 'Keep trying, товарищъ!';
+          }
+        } catch (error) {
+          result.classList.add('visible');
+          message.textContent = error.message;
+        } finally { button.disabled = false; }
+      });
+    </script>
+  </body>
+</html>

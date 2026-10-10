@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+    {% set active_page = 'admin' %}
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="flag-page">
+            <div class="flag-container">
+                <div class="trophy-icon">🏆</div>
+
+                <h1>Доступ к закрытому отсеку получен</h1>
+                <p class="subtitle">Лаборатория X фиксирует успешное проникновение</p>
+
+                <div class="flag-box">
+                    <span class="flag-label">Секретный маркер</span>
+                    <div class="flag-text">kevactf{4l1c3_wh1sp3rs_thr0ugh_th3_0ld_p0rtal}</div>
+                </div>
+
+                <p class="footer-text">
+                    Эксперимент завершён. Реальность пока стабильна.
+                </p>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

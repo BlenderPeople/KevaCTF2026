@@ -1,0 +1,600 @@
+/* Vintage Typewriter Styling */
+:root {
+    --machine-body: #1c1c1f;
+    --machine-metal: #2b2b30;
+    --machine-rim: #3d3d45;
+    --brass-gold: #c5a059;
+    --brass-dark: #8c6d32;
+    --paper-bg: #f8f4e6;
+    --paper-line: #ece4cb;
+    --ink-black: #1a1815;
+    --ink-red: #9e2a2b;
+    --key-metal-ring: #d9d9df;
+    --key-surface: #f4efe2;
+    --key-pressed: #cfc8b6;
+    --key-text: #22201d;
+    --desk-wood: #231709;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    min-height: 100vh;
+    background: radial-gradient(circle at center, #3a2612 0%, #170e06 100%);
+    font-family: 'Courier Prime', 'Special Elite', monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    color: #333;
+    overflow-x: hidden;
+}
+
+.desk-surface {
+    position: relative;
+    max-width: 960px;
+    width: 100%;
+    margin: auto;
+}
+
+/* Machine Chassis */
+.typewriter-container {
+    position: relative;
+    background: linear-gradient(180deg, #18181c 0%, #25252c 40%, #151518 100%);
+    border-radius: 28px 28px 40px 40px;
+    padding: 30px 40px 40px 40px;
+    box-shadow: 
+        0 30px 60px rgba(0, 0, 0, 0.9),
+        inset 0 2px 4px rgba(255, 255, 255, 0.15),
+        inset 0 -6px 15px rgba(0, 0, 0, 0.8),
+        0 0 0 4px #0d0d0f;
+    border: 1px solid #33333d;
+}
+
+/* Brass Plaque */
+.brand-plate {
+    position: relative;
+    background: linear-gradient(135deg, #d4af37 0%, #aa8022 50%, #f3e5ab 75%, #8a6414 100%);
+    color: #291802;
+    text-align: center;
+    padding: 8px 16px;
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.7);
+    width: 380px;
+    margin: 0 auto 20px auto;
+    border: 1px solid #70500e;
+}
+
+.brand-text {
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.brand-sub {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    opacity: 0.85;
+}
+
+.screw {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    background: #50390a;
+    border-radius: 50%;
+    box-shadow: inset 0 1px 1px #000, 0 1px 1px rgba(255,255,255,0.4);
+}
+.screw::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 1px;
+    width: 5px;
+    height: 1px;
+    background: #a37c22;
+}
+.top-left { top: 4px; left: 5px; }
+.top-right { top: 4px; right: 5px; }
+.bottom-left { bottom: 4px; left: 5px; }
+.bottom-right { bottom: 4px; right: 5px; }
+
+/* Carriage & Platen Roller */
+.carriage-assembly {
+    position: relative;
+    background: #0f0f12;
+    border-radius: 12px;
+    padding: 15px 25px;
+    box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.95), 0 2px 4px rgba(255,255,255,0.05);
+    margin-bottom: 25px;
+    border: 1px solid #282830;
+}
+
+.roller-bar {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    right: 15px;
+    height: 38px;
+    background: linear-gradient(180deg, #111 0%, #2b2b2b 40%, #151515 80%, #000 100%);
+    border-radius: 6px;
+    transform: translateY(-50%);
+    z-index: 1;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.8);
+}
+
+.roller-knob {
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    height: 54px;
+    background: repeating-linear-gradient(180deg, #444, #444 3px, #1a1a1a 3px, #1a1a1a 6px);
+    border-radius: 4px;
+    transform: translateY(-50%);
+    z-index: 2;
+    border: 2px solid #555;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.9);
+}
+.left-knob { left: -12px; }
+.right-knob { right: -12px; }
+
+/* Paper Sheet */
+.paper-sheet {
+    position: relative;
+    z-index: 3;
+    background-color: var(--paper-bg);
+    background-image: 
+        radial-gradient(#d6ceb8 10%, transparent 11%),
+        linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(230,220,195,0.3) 100%);
+    min-height: 220px;
+    max-height: 340px;
+    overflow-y: auto;
+    border-radius: 3px;
+    padding: 24px 30px;
+    box-shadow: 
+        0 12px 24px rgba(0, 0, 0, 0.5),
+        0 1px 3px rgba(0,0,0,0.3),
+        inset 0 0 60px rgba(180, 160, 120, 0.2);
+    border-left: 1px solid #d4cca9;
+    border-right: 1px solid #d4cca9;
+    font-family: 'Special Elite', 'Courier Prime', monospace;
+    color: var(--ink-black);
+    transition: all 0.2s ease;
+}
+
+/* Custom scrollbar for paper */
+.paper-sheet::-webkit-scrollbar {
+    width: 6px;
+}
+.paper-sheet::-webkit-scrollbar-thumb {
+    background: #c5ba9d;
+    border-radius: 3px;
+}
+
+.paper-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #7d7159;
+    border-bottom: 1px dashed #beb295;
+    padding-bottom: 6px;
+    margin-bottom: 16px;
+}
+
+.typed-content {
+    font-size: 19px;
+    line-height: 1.6;
+    letter-spacing: 0.5px;
+    word-break: break-all;
+    white-space: pre-wrap;
+    min-height: 45px;
+}
+
+.ink-text {
+    color: var(--ink-black);
+    text-shadow: 0.3px 0.3px 0 rgba(0,0,0,0.5);
+}
+
+.ink-text.red-mode {
+    color: var(--ink-red);
+}
+
+.paper-cursor {
+    display: inline-block;
+    font-weight: bold;
+    color: #111;
+    animation: blink 0.9s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+.paper-divider {
+    border: none;
+    border-top: 1px dashed #7a705b;
+    margin: 15px 0 10px 0;
+}
+
+.response-section {
+    font-size: 15px;
+}
+
+.response-label {
+    font-size: 11px;
+    font-weight: bold;
+    color: #554d3d;
+    margin-bottom: 4px;
+}
+
+.response-text {
+    color: #153e75;
+    background: rgba(0, 0, 0, 0.04);
+    padding: 8px;
+    border-radius: 3px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 14px;
+    border-left: 3px solid #153e75;
+}
+
+/* Paper Bail Scale Bar */
+.paper-bail {
+    position: relative;
+    z-index: 4;
+    background: linear-gradient(180deg, #7a7a85 0%, #3d3d44 50%, #202025 100%);
+    height: 14px;
+    border-radius: 7px;
+    margin-top: 8px;
+    border: 1px solid #8e8e9c;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bail-scale {
+    width: 90%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px;
+    color: #d1d1db;
+    font-weight: bold;
+}
+
+/* Controls & Status Indicators */
+.machine-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #151518;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border: 1px solid #2e2e38;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+}
+
+.status-lamp-group {
+    display: flex;
+    gap: 20px;
+}
+
+.lamp-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.lamp {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #333;
+    border: 1px solid #666;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.4);
+    transition: all 0.2s ease;
+}
+
+.lamp.red.active {
+    background: #ff2a2a;
+    box-shadow: 0 0 10px #ff2a2a, inset 0 1px 2px #fff;
+}
+.lamp.amber.active {
+    background: #ffaa00;
+    box-shadow: 0 0 10px #ffaa00, inset 0 1px 2px #fff;
+}
+.lamp.green.active {
+    background: #00e676;
+    box-shadow: 0 0 10px #00e676, inset 0 1px 2px #fff;
+}
+
+.lamp-label {
+    font-size: 9px;
+    color: #8c8c9a;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
+.lever-group {
+    display: flex;
+    gap: 12px;
+}
+
+.mechanical-btn {
+    position: relative;
+    background: linear-gradient(180deg, #3a3a44 0%, #1f1f24 100%);
+    border: 1px solid #5a5a68;
+    color: #e5e5ec;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.2);
+    transition: all 0.1s ease;
+}
+
+.mechanical-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.9), inset 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.lever-action:hover {
+    background: linear-gradient(180deg, #4c4c58 0%, #2b2b32 100%);
+}
+
+.hint-link {
+    color: #e8c87b;
+    border-color: #927533;
+}
+.hint-link:hover {
+    color: #fff;
+    background: linear-gradient(180deg, #614a1c 0%, #30240d 100%);
+}
+
+/* Keyboard Chassis & Keys */
+.keyboard-casing {
+    background: #111114;
+    border-radius: 16px;
+    padding: 24px 15px;
+    box-shadow: 
+        inset 0 10px 25px rgba(0,0,0,0.95),
+        0 2px 3px rgba(255,255,255,0.08);
+    border: 2px solid #282830;
+}
+
+.keyboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+.key-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    width: 100%;
+}
+
+/* Individual Vintage Round Key */
+.type-key {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, var(--key-metal-ring) 0%, #7d7d85 70%, #44444a 100%);
+    padding: 3px;
+    box-shadow: 
+        0 6px 10px rgba(0,0,0,0.7),
+        0 2px 4px rgba(0,0,0,0.9),
+        inset 0 1px 1px rgba(255,255,255,0.8);
+    cursor: pointer;
+    transition: transform 0.05s ease, box-shadow 0.05s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.key-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #fffdfa 0%, var(--key-surface) 60%, #ded7c3 100%);
+    border: 1.5px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.key-char {
+    font-family: 'Special Elite', 'Courier Prime', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--key-text);
+    line-height: 1;
+}
+
+.key-sub {
+    font-size: 9px;
+    color: #777;
+    margin-bottom: 2px;
+}
+
+/* Key Active / Pressed state */
+.type-key:active, .type-key.pressed {
+    transform: translateY(4px) scale(0.96);
+    box-shadow: 
+        0 2px 4px rgba(0,0,0,0.8),
+        inset 0 2px 5px rgba(0,0,0,0.6);
+}
+
+.type-key:active .key-inner, .type-key.pressed .key-inner {
+    background: var(--key-pressed);
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.5);
+}
+
+/* Wide keys */
+.type-key.key-wide {
+    width: 80px;
+    border-radius: 24px;
+}
+.type-key.key-wide .key-inner {
+    border-radius: 20px;
+}
+.type-key.key-wide .key-char {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+.type-key.key-space {
+    width: 340px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #5c5c64 0%, #2b2b30 70%, #1a1a1e 100%);
+}
+.type-key.key-space .key-inner {
+    border-radius: 8px;
+    background: linear-gradient(180deg, #ded8c6 0%, #c4baa3 100%);
+}
+.type-key.key-space .key-char {
+    font-size: 11px;
+    color: #555;
+    letter-spacing: 2px;
+}
+
+/* Carriage Return Lever on side */
+.carriage-lever {
+    position: absolute;
+    top: 50px;
+    left: -20px;
+    width: 25px;
+    height: 120px;
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.15s ease;
+}
+
+.lever-handle {
+    width: 14px;
+    height: 38px;
+    background: linear-gradient(90deg, #ccc 0%, #fff 50%, #777 100%);
+    border-radius: 7px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.7);
+}
+
+.lever-arm {
+    width: 6px;
+    height: 90px;
+    margin-left: 4px;
+    background: linear-gradient(90deg, #555 0%, #888 50%, #333 100%);
+    border-radius: 3px;
+    box-shadow: -2px 4px 6px rgba(0,0,0,0.5);
+}
+
+.carriage-lever:active, .carriage-lever.pulled {
+    transform: rotate(-25deg) translateY(10px);
+}
+
+/* Center Typebar Basket Fan */
+.typebar-basket {
+    position: relative;
+    height: 28px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.typebars-fan {
+    width: 160px;
+    height: 18px;
+    border-top: 3px solid #4d4d57;
+    border-radius: 50% 50% 0 0;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.8);
+    position: relative;
+}
+
+.strike-guide {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 12px;
+    background: #8e8e9c;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.ribbon-vibrator {
+    position: absolute;
+    right: 20px;
+}
+
+.ribbon-color-switch {
+    display: flex;
+    gap: 6px;
+    background: #111;
+    padding: 3px 6px;
+    border-radius: 10px;
+    border: 1px solid #333;
+    cursor: pointer;
+}
+
+.color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+}
+.color-dot.black { background: #111; border: 1px solid #666; }
+.color-dot.red { background: #e63946; }
+.color-dot.active { opacity: 1; box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .typewriter-container {
+        padding: 20px 15px;
+    }
+    .brand-plate {
+        width: 280px;
+    }
+    .type-key {
+        width: 34px;
+        height: 34px;
+    }
+    .type-key.key-wide {
+        width: 55px;
+    }
+    .type-key.key-space {
+        width: 180px;
+    }
+    .key-char {
+        font-size: 13px;
+    }
+    .machine-controls {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .carriage-lever {
+        display: none;
+    }
+}

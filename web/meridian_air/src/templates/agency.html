@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+    {% set active_page = 'agency' %}
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <section class="hero-section">
+            <div class="hero-text">
+                <h1>Добро пожаловать, {{ user.sub }}!</h1>
+                <p>Личный кабинет Meridian Air — следите за статусом рейсов, уведомлениями и настройками аккаунта в одном месте.</p>
+                <div class="hero-actions">
+                    <a href="/alerts" class="btn-lg btn-primary">🔔 Уведомления</a>
+                    <a href="javascript:void(0)" class="btn-lg btn-outline-primary" onclick="document.getElementById('flightsModal').style.display='flex'">✈️ Текущие рейсы</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-flights">248</div>
+                        <div class="stat-label">Рейсов в этом месяце</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-passengers">96</div>
+                        <div class="stat-label">% довольных пассажиров</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-label">Поддержка</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🛫</div>
+                <h3>Онлайн-регистрация</h3>
+                <p>Регистрируйтесь на рейс и получайте посадочный талон, не выходя из личного кабинета.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>Безопасность</h3>
+                <p>Ваши данные и бронирования защищены современными методами шифрования.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Быстрая поддержка</h3>
+                <p>Служба поддержки Meridian Air на связи круглосуточно и без выходных.</p>
+            </div>
+        </section>
+
+        <section class="platform-activity">
+            <h2>📈 Активность платформы</h2>
+            <p class="section-subtitle">Последние события в системе</p>
+            <div class="activity-scroll-container">
+                <div class="activity-list" id="activityList"></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    const activityTemplates = [
+        { icon: '🛫', text: 'рейсов вылетело по расписанию', range: [3, 15] },
+        { icon: '🎫', text: 'билетов забронировано', range: [10, 40] },
+        { icon: '🧳', text: 'пассажиров зарегистрировано онлайн', range: [8, 30] },
+        { icon: '🔄', text: 'обновлено статусов рейсов', range: [5, 20] },
+        { icon: '⭐', text: 'положительных отзывов', range: [5, 18] },
+        { icon: '📍', text: 'рейсов приземлилось вовремя', range: [2, 12] },
+        { icon: '✉️', text: 'отправлено уведомлений пассажирам', range: [15, 40] },
+        { icon: '🛎️', text: 'обращений в поддержку обработано', range: [4, 16] },
+    ];
+
+    const timeAgo = ['2 мин назад', '5 мин назад', '12 мин назад', '18 мин назад', '25 мин назад', '32 мин назад', '1 час назад', '2 часа назад', '3 часа назад', '4 часа назад'];
+
+    function getRandomNumber(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateActivityItems() {
+        const items = [];
+        const shuffled = [...activityTemplates].sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, getRandomNumber(6, 8));
+
+        selected.forEach((template, index) => {
+            const value = getRandomNumber(template.range[0], template.range[1]);
+            const time = timeAgo[index] || `${getRandomNumber(1, 5)} часов назад`;
+            items.push(`<div class="activity-item"><span class="activity-icon">${template.icon}</span><span class="activity-text"><strong>${value}</strong> ${template.text}</span><span class="activity-time">${time}</span></div>`);
+        });
+
+        return items.join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const activityList = document.getElementById('activityList');
+        if (activityList) {
+            activityList.innerHTML = generateActivityItems();
+        }
+        animateValue('stat-flights', 0, getRandomNumber(200, 300), 1000);
+        animateValue('stat-passengers', 0, getRandomNumber(90, 99), 1000);
+    });
+
+    function animateValue(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+        const range = end - start;
+        const minTimer = 50;
+        let stepTime = Math.abs(Math.floor(duration / range));
+        stepTime = Math.max(stepTime, minTimer);
+        let startTime = new Date().getTime();
+        let endTime = startTime + duration;
+        let timer;
+
+        function run() {
+            let now = new Date().getTime();
+            let remaining = Math.max((endTime - now) / duration, 0);
+            let value = Math.round(end - (remaining * range));
+            obj.innerHTML = value;
+            if (value == end) clearInterval(timer);
+        }
+        timer = setInterval(run, stepTime);
+        run();
+    }
+</script>
+{% endblock %}

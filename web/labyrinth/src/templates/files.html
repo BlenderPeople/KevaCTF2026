@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="files-layout">
+    <section class="files-panel">
+        <div class="files-header">
+            <h1>> Файловая система_</h1>
+            <p>Кликните по файлу, вставьте токен из профиля и получите текстовое содержимое. TopSecretFile принимает только admin-токен.</p>
+        </div>
+
+        <div class="files-grid">
+            {% for file in files %}
+            <button type="button" class="file-item file-trigger{% if file.icon == 'FLAG' %} flag-file{% endif %}" data-file-name="{{ file.name }}">
+                <div class="file-icon">{{ file.icon }}</div>
+                <div class="file-name">{{ file.name }}</div>
+            </button>
+            {% endfor %}
+        </div>
+    </section>
+
+    <aside class="preview-panel">
+        <div class="widget-header">ПРОСМОТР СОДЕРЖИМОГО</div>
+        <div class="file-preview-meta" id="selectedFileName">Файл не выбран</div>
+        <pre class="file-preview-output" id="filePreviewOutput">Выберите файл и подтвердите токен доступа.</pre>
+        <div class="form-status form-error" id="previewError" style="display: none;"></div>
+    </aside>
+</div>
+
+<div class="token-modal" id="tokenModal" hidden>
+    <div class="token-backdrop" data-close-modal="true"></div>
+    <div class="token-dialog">
+        <div class="widget-header">ТОКЕН ДОСТУПА</div>
+        <form id="tokenPromptForm">
+            <div class="form-group-full">
+                <label for="fileAccessToken">Вставьте токен доступа</label>
+                <input type="text" id="fileAccessToken" class="form-input" placeholder="введите токен..." autocomplete="off" required>
+            </div>
+            <div class="form-status form-error" id="tokenModalError" style="display: none;"></div>
+            <div class="token-dialog-actions">
+                <button type="submit" class="btn" id="tokenConfirmBtn">[ открыть файл ]</button>
+                <button type="button" class="btn secondary-btn" data-close-modal="true">[ отмена ]</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const fileButtons = document.querySelectorAll('.file-trigger');
+    const tokenModal = document.getElementById('tokenModal');
+    const tokenForm = document.getElementById('tokenPromptForm');
+    const tokenInput = document.getElementById('fileAccessToken');
+    const tokenConfirmBtn = document.getElementById('tokenConfirmBtn');
+    const tokenModalError = document.getElementById('tokenModalError');
+    const selectedFileName = document.getElementById('selectedFileName');
+    const filePreviewOutput = document.getElementById('filePreviewOutput');
+    const previewError = document.getElementById('previewError');
+
+    let pendingFileName = '';
+    let lastToken = '';
+
+    function openModal(fileName) {
+        pendingFileName = fileName;
+        tokenModal.hidden = false;
+        tokenInput.value = lastToken;
+        tokenModalError.style.display = 'none';
+        tokenModalError.textContent = '';
+        requestAnimationFrame(() => tokenInput.focus());
+    }
+
+    function closeModal() {
+        tokenModal.hidden = true;
+        pendingFileName = '';
+        tokenModalError.style.display = 'none';
+        tokenModalError.textContent = '';
+    }
+
+    fileButtons.forEach((button) => {
+        button.addEventListener('click', () => openModal(button.dataset.fileName));
+    });
+
+    tokenModal.addEventListener('click', (event) => {
+        if (event.target.dataset.closeModal === 'true') {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !tokenModal.hidden) {
+            closeModal();
+        }
+    });
+
+    tokenForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const token = tokenInput.value.trim();
+        if (!token || !pendingFileName) {
+            return;
+        }
+
+        tokenConfirmBtn.disabled = true;
+        tokenConfirmBtn.textContent = '[ загрузка... ]';
+        tokenModalError.style.display = 'none';
+        previewError.style.display = 'none';
+
+        try {
+            const response = await fetch('/files/content', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    file_name: pendingFileName,
+                    token: token
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                tokenModalError.textContent = result.detail || 'Не удалось открыть файл';
+                tokenModalError.style.display = 'block';
+                return;
+            }
+
+            lastToken = token;
+            selectedFileName.textContent = result.name;
+            filePreviewOutput.textContent = result.content;
+            closeModal();
+        } catch (error) {
+            previewError.textContent = 'Ошибка соединения при загрузке файла';
+            previewError.style.display = 'block';
+        } finally {
+            tokenConfirmBtn.disabled = false;
+            tokenConfirmBtn.textContent = '[ открыть файл ]';
+        }
+    });
+</script>
+{% endblock %}

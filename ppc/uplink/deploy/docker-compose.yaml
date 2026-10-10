@@ -1,0 +1,12 @@
+name: uplink
+
+services:
+  uplink:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "64444:64444"
+    restart: unless-stopped
+    mem_limit: 256mb
+    cpus: 0.5

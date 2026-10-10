@@ -1,0 +1,12 @@
+name: pulse
+
+services:
+  pulse:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "55555:55555"
+    restart: unless-stopped
+    mem_limit: 256mb
+    cpus: 0.5

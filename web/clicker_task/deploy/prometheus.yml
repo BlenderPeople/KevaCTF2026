@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["clicker_task_prometheus:9090"]
+
+  - job_name: "clicker_task_web"
+    metrics_path: /metrics
+    scrape_interval: 5s
+    scrape_timeout: 4s
+    static_configs:
+      - targets: ["clicker_task_web:5000"]

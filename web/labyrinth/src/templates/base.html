@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Labyrinth</title>
+    <link rel="stylesheet" href="/static/style.css?v=101">
+</head>
+<body>
+    <div class="crt-overlay"></div>
+    <div class="flicker-layer"></div>
+
+    <header class="terminal-bar">
+        <div class="terminal-title">
+            <span class="blink">█</span> SYSTEM://LABYRINTH<span class="cursor-blink">_</span>
+        </div>
+        <nav class="terminal-nav">
+            {% if user %}
+                <a href="/" class="nav-link">[терминал]</a>
+                <a href="/profile" class="nav-link">[профиль]</a>
+                <a href="/files" class="nav-link">[файлы]</a>
+                <a href="/message" class="nav-link">[связь]</a>
+                <a href="/support" class="nav-link">[помощь]</a>
+                <a href="/settings" class="nav-link">[настройки]</a>
+                <a href="/logout" class="nav-link danger">[выход:{{ user.sub }}]</a>
+            {% else %}
+                <a href="/login" class="nav-link">[вход]</a>
+                <a href="/register" class="nav-link">[регистрация]</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main class="labyrinth-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="status-bar">
+        <div class="status-right">
+            <span>Сектор: <span id="sector">???</span></span>
+            <span>|</span>
+            <span>Время: <span id="clock"></span></span>
+        </div>
+    </footer>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        const sectors = ['A-7', 'X-13', 'B-3', 'D-9', 'ARCH', 'VOID'];
+        document.getElementById('sector').textContent = sectors[Math.floor(Math.random() * sectors.length)];
+
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            try {
+                const response = await originalFetch.apply(this, args);
+                if (response.status === 401 || response.status === 422) {
+                    const contentType = response.headers.get('content-type');
+                    let isJwtError = false;
+                    if (contentType?.includes('application/json')) {
+                        try {
+                            const data = await response.clone().json();
+                            const detail = data?.detail;
+                            if (detail) {
+                                const detailStr = typeof detail === 'string' ? detail : JSON.stringify(detail);
+                                isJwtError = detailStr.toLowerCase().includes('token') ||
+                                             detailStr.toLowerCase().includes('auth') ||
+                                             detailStr.toLowerCase().includes('cookie') ||
+                                             detailStr.toLowerCase().includes('field required');
+                            }
+                        } catch (e) {
+                            isJwtError = true;
+                        }
+                    } else {
+                        isJwtError = true;
+                    }
+
+                    if (isJwtError && window.location.pathname !== '/login') {
+                        window.location.href = '/login';
+                        throw new Error('Session expired');
+                    }
+                }
+                return response;
+            } catch (error) {
+                if (error.message === 'Session expired') throw error;
+                return originalFetch.apply(this, args);
+            }
+        };
+    </script>
+</body>
+</html>

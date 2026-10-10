@@ -1,0 +1,34 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "57778:57778"
+    env_file:
+      - ../src/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 512mb
+    cpus: 0.5
+
+  postgres:
+    image: postgres:17
+    env_file:
+      - ../src/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U db_user -d secret"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    mem_limit: 1024mb
+    cpus: 1.0
+
+volumes:
+  postgres_data:

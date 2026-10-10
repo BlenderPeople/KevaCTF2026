@@ -1,0 +1,14 @@
+services:
+  what:
+    image: ubuntu:latest
+    platform: linux/amd64
+    container_name: what
+    ports:
+      - "41855:41855"
+    volumes:
+      - ../src/what:/what:ro
+    command: ["/bin/bash", "-c", "apt update && apt install -y socat && socat TCP-LISTEN:41855,fork,reuseaddr TCP:127.0.0.1:41855"]
+    restart: unless-stopped
+    mem_limit: 256M
+    mem_reservation: 128M
+    cpus: '0.5'

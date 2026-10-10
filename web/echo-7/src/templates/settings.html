@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+    {% set active_page = 'settings' %}
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="settings-header">
+            <h1>⚙️ Настройки профиля</h1>
+            <p>Управление данными учётной записи исследовательского центра</p>
+        </div>
+
+        <div class="settings-grid">
+            <div class="settings-card">
+                <h3>🔑 Обновление пароля</h3>
+                <form id="passwordForm">
+                    <div class="form-group-full">
+                        <label for="newPassword">Новый пароль</label>
+                        <input 
+                            type="password" 
+                            id="newPassword" 
+                            name="new_password" 
+                            required 
+                            minlength="8" 
+                            maxlength="50"
+                            autocomplete="new-password"
+                        >
+                        <div class="validation-messages" id="newPasswordErrors"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" id="passwordBtn">Обновить пароль</button>
+                </form>
+                <div class="form-status" id="passwordStatus" style="display: none;"></div>
+            </div>
+
+            <div class="settings-card">
+                <h3>👤 Обновление логина</h3>
+                <form id="loginForm">
+                    <div class="form-group-full">
+                        <label for="currentLogin">Текущий логин</label>
+                        <input 
+                            type="text" 
+                            id="currentLogin" 
+                            value="{{ user.sub }}" 
+                            disabled 
+                            class="disabled-input"
+                        >
+                    </div>
+                    <div class="form-group-full">
+                        <label for="newLogin">Новый логин</label>
+                        <input 
+                            type="text" 
+                            id="newLogin" 
+                            name="new_login" 
+                            required 
+                            minlength="8" 
+                            maxlength="30" 
+                            autocomplete="off"
+                        >
+                        <div class="validation-messages" id="newLoginErrors"></div>
+                        <small class="form-hint">8-30 символов, без пробелов и кириллицы</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">Обновить логин</button>
+                </form>
+                <div class="form-status" id="loginStatus" style="display: none;"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const allowedPattern = /^[^ \u0400-\u04FF\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+$/u;
+    const emojiPattern = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E0}-\u{1F1FF}]/u;
+
+    function validateField(value, min, max, errorsEl, inputEl) {
+        const errors = [];
+        
+        if (value.length > 0) {
+            if (value.includes(' ')) {
+                errors.push('Без пробелов');
+            }
+            if (/[\u0400-\u04FF]/.test(value)) {
+                errors.push('Без кириллицы');
+            }
+            if (emojiPattern.test(value)) {
+                errors.push('Без смайликов');
+            }
+            if (value.length < min || value.length > max) {
+                errors.push(`${min}–${max} символов`);
+            }
+            if (!allowedPattern.test(value)) {
+                errors.push('Латиница, цифры, спецсимволы');
+            }
+        }
+        
+        if (errors.length === 0) {
+            errorsEl.innerHTML = '';
+            errorsEl.classList.remove('show');
+            inputEl.classList.remove('invalid');
+            if (value.length > 0) {
+                inputEl.classList.add('valid');
+            } else {
+                inputEl.classList.remove('valid');
+            }
+            return true;
+        } else {
+            errorsEl.innerHTML = errors.map(e => 
+                `<span class="validation-message">${e}</span>`
+            ).join('');
+            errorsEl.classList.add('show');
+            inputEl.classList.add('invalid');
+            inputEl.classList.remove('valid');
+            return false;
+        }
+    }
+
+    const newPassword = document.getElementById('newPassword');
+    const newPasswordErrors = document.getElementById('newPasswordErrors');
+    const passwordForm = document.getElementById('passwordForm');
+    const passwordBtn = document.getElementById('passwordBtn');
+    const passwordStatus = document.getElementById('passwordStatus');
+
+    newPassword.addEventListener('input', function() {
+        validateField(this.value, 8, 50, newPasswordErrors, this);
+    });
+
+    passwordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (!validateField(newPassword.value, 8, 50, newPasswordErrors, newPassword)) {
+            return;
+        }
+
+        passwordBtn.disabled = true;
+        passwordBtn.textContent = 'Сохранение...';
+        passwordStatus.style.display = 'none';
+
+        try {
+            const response = await fetch('/upd/user', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    new_password: newPassword.value
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json().catch(function() { return {}; });
+                passwordStatus.className = 'form-status success';
+                passwordStatus.innerHTML = '✅ Пароль обновлён. Перенаправление...';
+                passwordStatus.style.display = 'block';
+
+                setTimeout(function() {
+                    window.location.href = '/logout';
+                }, 500);
+            } else {
+                const result = await response.json().catch(function() { return {}; });
+                let errorMsg = 'Произошла непредвиденная ошибка';
+
+                if (result.detail) {
+                    errorMsg = result.detail;
+                }
+
+                passwordStatus.className = 'form-status error';
+                passwordStatus.innerHTML = '❌ ' + errorMsg;
+                passwordStatus.style.display = 'block';
+            }
+        } catch (err) {
+            passwordStatus.className = 'form-status error';
+            passwordStatus.innerHTML = '❌ Ошибка соединения с сервером';
+            passwordStatus.style.display = 'block';
+        } finally {
+            passwordBtn.disabled = false;
+            passwordBtn.textContent = 'Обновить пароль';
+        }
+    });
+
+    const newLogin = document.getElementById('newLogin');
+    const newLoginErrors = document.getElementById('newLoginErrors');
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginStatus = document.getElementById('loginStatus');
+
+    newLogin.addEventListener('input', function() {
+        validateField(this.value, 8, 30, newLoginErrors, this);
+    });
+
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (!validateField(newLogin.value, 8, 30, newLoginErrors, newLogin)) {
+            return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Сохранение...';
+        loginStatus.style.display = 'none';
+
+        try {
+            const response = await fetch('/upd/user', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    login: newLogin.value.trim()
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json().catch(function() { return {}; });
+                loginStatus.className = 'form-status success';
+                loginStatus.innerHTML = '✅ Логин обновлён. Перенаправление...';
+                loginStatus.style.display = 'block';
+
+                setTimeout(function() {
+                    window.location.href = '/logout';
+                }, 500);
+            } else {
+                const result = await response.json().catch(function() { return {}; });
+                let errorMsg = 'Произошла непредвиденная ошибка';
+
+                if (response.status === 409) {
+                    errorMsg = 'Такой логин уже существует';
+                } else if (result.detail) {
+                    errorMsg = result.detail;
+                }
+
+                loginStatus.className = 'form-status error';
+                loginStatus.innerHTML = '❌ ' + errorMsg;
+                loginStatus.style.display = 'block';
+            }
+        } catch (err) {
+            loginStatus.className = 'form-status error';
+            loginStatus.innerHTML = '❌ Ошибка соединения с сервером';
+            loginStatus.style.display = 'block';
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Обновить логин';
+        }
+    });
+</script>
+{% endblock %}

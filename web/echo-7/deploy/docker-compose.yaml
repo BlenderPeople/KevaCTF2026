@@ -1,0 +1,39 @@
+services:
+  backend-echo:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    ports:
+      - 57777:57777
+    environment:
+      DB_URL: postgresql+asyncpg://701abcc0cc94bca2aa2d05dd:1d07036e03583c5c6b5caef7@postgres-echo:5432/HRConnect
+      JWT_KEY: 137e3e2b37c48351cd9576cb1f52b644d1ae2287ae8cd2a7c92486670c719ee6
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      SECRET_TOKEN: ad563982011c2685d697a1aeb1e9552ec401cc47500853d3db876a8d71317350
+    depends_on:
+      postgres-echo:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 512mb
+    cpus: 0.5
+  postgres-echo:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: HRConnect
+      POSTGRES_USER: 701abcc0cc94bca2aa2d05dd
+      POSTGRES_PASSWORD: 1d07036e03583c5c6b5caef7
+    volumes:
+      - postgres_data_1:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U 701abcc0cc94bca2aa2d05dd -d HRConnect"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    mem_limit: 1024mb
+    cpus: 1.0
+
+volumes:
+  postgres_data_1:

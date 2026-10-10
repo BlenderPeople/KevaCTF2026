@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="message-container">
+    <div class="message-card">
+        <div class="card-header">
+            <h2>> Отправка токена_</h2>
+            <p>Передача токена доступа другому пользователю лабиринта</p>
+        </div>
+        <div class="card-body">
+            <form id="sendTokenForm">
+                <div class="form-group">
+                    <label for="login">Логин получателя</label>
+                    <input type="text" id="login" name="login" class="form-input"
+                           placeholder="введите логин..." required minlength="5" maxlength="30" autocomplete="off">
+                    <div class="validation-messages" id="loginErrors"></div>
+                </div>
+                <div class="form-group">
+                    <label for="token">Токен</label>
+                    <input type="text" id="token" name="token" class="form-input"
+                           placeholder="ваш токен..." required minlength="64" maxlength="64">
+                    <div class="validation-messages" id="tokenErrors"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn" id="submitBtn">[ отправить ]</button>
+                </div>
+            </form>
+
+            <div class="form-status" id="formStatus" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SEND_TOKEN_URL = {{ send_token_url|tojson }};
+    const form = document.getElementById('sendTokenForm');
+    const loginInput = document.getElementById('login');
+    const tokenInput = document.getElementById('token');
+    const submitBtn = document.getElementById('submitBtn');
+    const formStatus = document.getElementById('formStatus');
+
+    const loginErrors = document.getElementById('loginErrors');
+    const tokenErrors = document.getElementById('tokenErrors');
+
+    const emojiPattern = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E0}-\u{1F1FF}]/u;
+
+    function validateLogin(value) {
+        const errors = [];
+        if (!value || value.trim() === '') errors.push('Обязательное поле');
+        else {
+            if (value.includes(' ')) errors.push('Без пробелов');
+            if (/[\u0400-\u04FF]/.test(value)) errors.push('Без кириллицы');
+            if (emojiPattern.test(value)) errors.push('Без смайликов');
+            if (value.length < 5 || value.length > 30) errors.push('5–30 символов');
+        }
+        return errors;
+    }
+
+    function validateToken(value) {
+        const errors = [];
+        if (!value || value.trim() === '') errors.push('Обязательное поле');
+        else if (value.length < 64 || value.length > 64) errors.push('Ровно 64 символа');
+        return errors;
+    }
+
+    function showErrors(errorsEl, errors) {
+        if (errors.length === 0) {
+            errorsEl.innerHTML = '';
+            errorsEl.classList.remove('show');
+            return true;
+        }
+        errorsEl.innerHTML = errors.map(e => `<span class="validation-message">${e}</span>`).join('');
+        errorsEl.classList.add('show');
+        return false;
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const loginErrs = validateLogin(loginInput.value);
+        const tokenErrs = validateToken(tokenInput.value);
+
+        const lOk = showErrors(loginErrors, loginErrs);
+        const tOk = showErrors(tokenErrors, tokenErrs);
+
+        if (!lOk || !tOk) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = '[ отправка... ]';
+        formStatus.style.display = 'none';
+
+        try {
+            const response = await fetch('/send-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({
+                    login: loginInput.value.trim(),
+                    url: SEND_TOKEN_URL,
+                    token: tokenInput.value.trim()
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                formStatus.className = 'form-status form-success';
+                formStatus.innerHTML = 'Токен успешно отправлен';
+                formStatus.style.display = 'block';
+            } else {
+                let errorMsg = 'Ошибка отправки';
+                if (result.detail) errorMsg = result.detail;
+                formStatus.className = 'form-status form-error show';
+                formStatus.innerHTML = errorMsg;
+                formStatus.style.display = 'block';
+            }
+        } catch (err) {
+            formStatus.className = 'form-status form-error show';
+            formStatus.innerHTML = 'Ошибка соединения';
+            formStatus.style.display = 'block';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '[ отправить ]';
+        }
+    });
+
+    [loginInput, tokenInput].forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.classList.contains('invalid')) {
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+    });
+</script>
+{% endblock %}

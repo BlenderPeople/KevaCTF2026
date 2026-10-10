@@ -1,0 +1,130 @@
+services:
+  clicker_task_web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: clicker_task_web
+    restart: unless-stopped
+    ports:
+      - "50505:5000"
+    environment:
+      FLAG: "kevactf{C0ngr4ts_YouVe_f1nally_W0n}"
+      SECRET_KEY: "clicker_task_secret_key"
+    volumes:
+      - ./config/monitoring.env:/app/config/monitoring.env:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+    depends_on:
+      - clicker_task_promtail
+      - clicker_task_grafana
+    mem_limit: 256m
+    cpus: 0.50
+    networks:
+      - clicker_task_net
+
+  clicker_task_promtail:
+    image: grafana/promtail:2.9.8
+    container_name: clicker_task_promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - clicker_task_loki
+    mem_limit: 128m
+    cpus: 0.25
+    networks:
+      - clicker_task_net
+
+  clicker_task_loki:
+    image: grafana/loki:2.9.8
+    container_name: clicker_task_loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    mem_limit: 256m
+    cpus: 0.50
+    networks:
+      - clicker_task_net
+
+  clicker_task_prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: clicker_task_prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    mem_limit: 128m
+    cpus: 0.25
+    networks:
+      - clicker_task_net
+
+  clicker_task_grafana:
+    image: grafana/grafana:10.4.12
+    container_name: clicker_task_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./config/monitoring.env
+    environment:
+      GRAFANA_URL: "http://127.0.0.1:3000"
+      GRAFANA_ADMIN_USER: "clicker_root"
+      GRAFANA_ADMIN_PASSWORD: "stay_out_of_prod_dashboards_2026"
+      GF_SECURITY_ADMIN_USER: "clicker_root"
+      GF_SECURITY_ADMIN_PASSWORD: "stay_out_of_prod_dashboards_2026"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_AUTO_ASSIGN_ORG: "true"
+      GF_USERS_AUTO_ASSIGN_ORG_ROLE: "Viewer"
+      GF_USERS_VIEWERS_CAN_EDIT: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - ./grafana/provisioning/dashboards/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - clicker_task_loki
+      - clicker_task_prometheus
+    mem_limit: 256m
+    cpus: 0.50
+    networks:
+      - clicker_task_net
+
+  clicker_task_grafana_init:
+    image: grafana/grafana:10.4.12
+    container_name: clicker_task_grafana_init
+    restart: "no"
+    entrypoint: ["/bin/sh", "/create-viewer-user.sh"]
+    env_file:
+      - ./config/monitoring.env
+    environment:
+      GF_SECURITY_ADMIN_USER: "clicker_root"
+      GF_SECURITY_ADMIN_PASSWORD: "stay_out_of_prod_dashboards_2026"
+    volumes:
+      - ./grafana/create-viewer-user.sh:/create-viewer-user.sh:ro
+    depends_on:
+      - clicker_task_grafana
+    mem_limit: 128m
+    cpus: 0.25
+    networks:
+      - clicker_task_net
+      
+
+networks:
+  clicker_task_net:
+    driver: bridge
+
+volumes:
+  grafana_data:
+  prometheus_data:
+  loki_data:

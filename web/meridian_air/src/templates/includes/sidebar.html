@@ -1,0 +1,57 @@
+<aside class="sidebar sidebar-left">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">MA</div>
+        <span class="sidebar-logo-text">Meridian Air</span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/agency" class="nav-item {% if active_page == 'agency' %}active{% endif %}">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="document.getElementById('flightsModal').style.display='flex'">
+            <span class="nav-icon">✈️</span>
+            <span class="nav-label">Текущие рейсы</span>
+        </a>
+        <a href="/alerts" class="nav-item {% if active_page == 'alerts' %}active{% endif %}">
+            <span class="nav-icon">🔔</span>
+            <span class="nav-label">Уведомления</span>
+            <span class="nav-badge">1</span>
+        </a>
+        <a href="/settings" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Настройки</span>
+        </a>
+        <a href="/support" class="nav-item {% if active_page == 'support' %}active{% endif %}">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Поддержка</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-mini">
+            <div class="user-avatar">{{ user.sub[0].upper() }}</div>
+            <div class="user-info">
+                <div class="user-name">{{ user.sub }}</div>
+                <div class="user-role">{{ user.status }}</div>
+            </div>
+        </div>
+        <a href="/logout" class="logout-link">Выйти</a>
+    </div>
+</aside>
+
+<div class="modal-overlay" id="flightsModal" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>✈️ Текущие рейсы</h3>
+            <button class="modal-close" onclick="document.getElementById('flightsModal').style.display='none'">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Функция отслеживания текущих рейсов пока недоступна.</p>
+            <p class="modal-hint">Мы работаем над тем, чтобы скоро вы могли видеть статус рейсов в реальном времени.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-lg btn-primary" onclick="document.getElementById('flightsModal').style.display='none'">Понятно</button>
+        </div>
+    </div>
+</div>

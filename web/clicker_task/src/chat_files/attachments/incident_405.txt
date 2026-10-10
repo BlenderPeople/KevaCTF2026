@@ -1,0 +1,9 @@
+Incident index:
+- 392: grafana panel timeout, ignored
+- 401: invalid dns cache for one minute
+- 405: support report "flag retrieval failed"
+- 418: synthetic test event
+- 422: parsing warning in dashboard draft
+
+Ops note:
+For real incident lookup, use the exact request id token from /flag output.

@@ -1,0 +1,13 @@
+services:
+  hashness:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "16767:16767"
+    environment:
+      PORT: "16767"
+      CTF_FLAG: "${CTF_FLAG:-kevactf{1_l0ve_y0ur_t3ars}}"
+    restart: unless-stopped
+    mem_limit: 256mb
+    cpus: 0.5

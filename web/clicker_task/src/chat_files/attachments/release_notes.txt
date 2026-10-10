@@ -1,0 +1,4 @@
+Release notes:
+- click endpoint is stable
+- /flag endpoint returns internal error with request id
+- logs were moved to Loki

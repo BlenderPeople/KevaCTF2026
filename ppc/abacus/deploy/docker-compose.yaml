@@ -1,0 +1,12 @@
+name: abacus
+
+services:
+  abacus:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "62223:62222"
+    restart: unless-stopped
+    mem_limit: 256mb
+    cpus: 0.5

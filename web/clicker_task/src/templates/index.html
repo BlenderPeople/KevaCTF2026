@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clicker</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body class="clicker-body">
+    <main class="clicker-shell">
+      <section class="clicker-head">
+        <p class="overline">Clicker Control</p>
+        <h1>Press Until It Breaks</h1>
+        <p class="muted">Target: reach {{ click_goal_display }} total clicks and unlock the reward.</p>
+      </section>
+
+      <button id="click-btn" class="click-orb" type="button" aria-label="click button">
+        <span class="orb-label">YOUR CLICKS</span>
+        <span id="total" class="orb-count">{{ your_clicks }}</span>
+      </button>
+
+      <section class="clicker-foot">
+        <p>Your progress: <span id="mine">{{ your_clicks }}</span> / {{ click_goal_display }} clicks</p>
+        <p id="click-note" class="click-note">
+          {% if click_goal_reached %}
+          Reward unlocked: <strong>{{ clicker_decoy_flag }}</strong>
+          {% else %}
+          Keep clicking to reach the goal!
+          {% endif %}
+        </p>
+      </section>
+    </main>
+
+    <script>
+      const clickBtn = document.getElementById("click-btn");
+      const totalNode = document.getElementById("total");
+      const mineNode = document.getElementById("mine");
+      const noteNode = document.getElementById("click-note");
+      const clickGoal = {{ click_goal }};
+      const LOCAL_CLICKS_KEY = "clicker_my_clicks";
+
+      // Load personal clicks from localStorage on page load
+      function loadPersonalClicks() {
+        const stored = localStorage.getItem(LOCAL_CLICKS_KEY);
+        return stored ? parseInt(stored, 10) : {{ your_clicks }};
+      }
+
+      // Initialize with stored or server value
+      let personalClicks = loadPersonalClicks();
+      totalNode.textContent = String(personalClicks);
+      mineNode.textContent = String(personalClicks);
+
+      clickBtn.addEventListener("click", async () => {
+        // Optimistically increment local clicks immediately
+        personalClicks += 1;
+        totalNode.textContent = String(personalClicks);
+        mineNode.textContent = String(personalClicks);
+        localStorage.setItem(LOCAL_CLICKS_KEY, String(personalClicks));
+
+        const response = await fetch("/api/click", { method: "POST" });
+        if (!response.ok) {
+          personalClicks -= 1;
+          totalNode.textContent = String(personalClicks);
+          mineNode.textContent = String(personalClicks);
+          localStorage.setItem(LOCAL_CLICKS_KEY, String(personalClicks));
+          noteNode.textContent = "Click request failed.";
+          return;
+        }
+        const data = await response.json();
+        if (data.goal_reached) {
+          noteNode.innerHTML = `Reward unlocked: <strong>${data.reward}</strong>`;
+        } else {
+          const remaining = clickGoal - data.your_clicks;
+          noteNode.textContent = `${remaining.toLocaleString()} clicks remaining`;
+        }
+        clickBtn.animate(
+          [
+            { transform: "scale(1)" },
+            { transform: "scale(1.04)" },
+            { transform: "scale(1)" },
+          ],
+          { duration: 220, easing: "ease-out" }
+        );
+      });
+    </script>
+  </body>
+</html>

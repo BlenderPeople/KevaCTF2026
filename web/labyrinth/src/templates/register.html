@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-terminal">
+        <div class="auth-header">
+            <div class="auth-header-dots">
+                <span></span><span></span><span></span>
+            </div>
+            <span class="auth-header-title">terminal@labyrinth:~/register</span>
+        </div>
+        <div class="auth-body">
+            <div class="login-icon">⊕</div>
+            <h2>Регистрация</h2>
+            <p class="auth-subtitle">Создание нового пользователя в системе...</p>
+
+            <div class="form-error" id="formError"></div>
+
+            <form method="POST" action="/register" id="registerForm" novalidate>
+                <div class="form-group">
+                    <label for="username">Логин</label>
+                    <input type="text" id="username" name="username" class="form-input"
+                           placeholder="придумайте логин..." required minlength="5" maxlength="30" autocomplete="off">
+                    <div class="validation-messages" id="usernameErrors"></div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" class="form-input"
+                           placeholder="придумайте пароль..." required minlength="5" maxlength="50">
+                    <div class="validation-messages" id="passwordErrors"></div>
+                </div>
+                <button type="submit" class="btn" id="submitBtn">[ создать ]</button>
+            </form>
+        </div>
+        <div class="auth-footer">
+            Есть аккаунт? <a href="/login">Войти в систему</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const usernameErrors = document.getElementById('usernameErrors');
+    const passwordErrors = document.getElementById('passwordErrors');
+    const formError = document.getElementById('formError');
+    const submitBtn = document.getElementById('submitBtn');
+
+    const emojiPattern = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E0}-\u{1F1FF}]/u;
+
+    function clearFormError() {
+        if (formError.classList.contains('show')) {
+            formError.classList.remove('show');
+            formError.textContent = '';
+            usernameInput.classList.remove('invalid');
+            passwordInput.classList.remove('invalid');
+        }
+    }
+
+    function validateField(value, min, max, errorsEl, inputEl) {
+        const errors = [];
+        if (!value || value.trim() === '') {
+            errors.push('Обязательное поле');
+        } else {
+            if (value.includes(' ')) errors.push('Без пробелов');
+            if (/[\u0400-\u04FF]/.test(value)) errors.push('Без кириллицы');
+            if (emojiPattern.test(value)) errors.push('Без смайликов');
+            if (value.length < min || value.length > max) errors.push(`${min}–${max} символов`);
+        }
+
+        if (errors.length === 0) {
+            errorsEl.innerHTML = '';
+            errorsEl.classList.remove('show');
+            inputEl.classList.remove('invalid');
+            if (value.length > 0) inputEl.classList.add('valid');
+            else inputEl.classList.remove('valid');
+            return true;
+        } else {
+            errorsEl.innerHTML = errors.map(e => `<span class="validation-message">${e}</span>`).join('');
+            errorsEl.classList.add('show');
+            inputEl.classList.add('invalid');
+            inputEl.classList.remove('valid');
+            return false;
+        }
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const u = validateField(usernameInput.value, 5, 30, usernameErrors, usernameInput);
+        const p = validateField(passwordInput.value, 5, 50, passwordErrors, passwordInput);
+        if (!u || !p) return;
+
+        formError.classList.remove('show');
+        formError.textContent = '';
+        submitBtn.disabled = true;
+        submitBtn.textContent = '[ создание... ]';
+
+        const formData = new FormData(this);
+        try {
+            const response = await fetch('/register', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            const contentType = response.headers.get("content-type");
+            let result;
+            if (contentType && contentType.includes("application/json")) {
+                result = await response.json();
+            } else {
+                result = await response.text();
+            }
+
+            if (response.ok) {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    window.location.href = '/login';
+                }
+            } else {
+                let errorMsg = "Ошибка регистрации";
+                if (typeof result === 'object' && result.detail) {
+                    const detail = result.detail;
+                    if (response.status === 409 || (typeof detail === 'string' && detail.includes('already exists'))) {
+                        errorMsg = "Пользователь уже существует";
+                    }
+                }
+                formError.textContent = errorMsg;
+                formError.classList.add('show');
+                usernameInput.classList.add('invalid');
+            }
+        } catch (err) {
+            formError.textContent = "Ошибка соединения с сервером";
+            formError.classList.add('show');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '[ создать ]';
+        }
+    });
+
+    usernameInput.addEventListener('input', () => {
+        clearFormError();
+        validateField(usernameInput.value, 5, 30, usernameErrors, usernameInput);
+    });
+    usernameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); passwordInput.focus(); }
+    });
+    passwordInput.addEventListener('input', () => {
+        clearFormError();
+        validateField(passwordInput.value, 5, 50, passwordErrors, passwordInput);
+    });
+</script>
+{% endblock %}

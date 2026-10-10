@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meridian Air</title>
+    <link rel="stylesheet" href="/static/style.css?v=71">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Meridian Air</div>
+        <div class="menu">
+            {% if user %}
+                <a href="/agency">Главная</a>
+                <a href="/logout">Выйти ({{ user.sub }})</a>
+            {% else %}
+                <a href="/login">Вход</a>
+                <a href="/register">Регистрация</a>
+            {% endif %}
+            <button class="theme-toggle" id="themeToggle" title="Переключить тему">
+                <span class="theme-icon">🌙</span>
+            </button>
+        </div>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    <footer>
+        <p>© 2026 Meridian Air</p>
+    </footer>
+    <script>
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/agency', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'text/html'
+                    }
+                });
+
+                if (response.status === 401 || response.status === 422) {
+                    localStorage.removeItem('access_token');
+                    window.location.href = '/login';
+                    return false;
+                }
+                return true;
+            } catch (err) {
+                console.error('Auth check error:', err);
+                return false;
+            }
+        }
+
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            try {
+                const response = await originalFetch.apply(this, args);
+
+                if (response.status === 401 || response.status === 422) {
+                    const contentType = response.headers.get('content-type');
+                    let isJwtError = false;
+
+                    if (contentType?.includes('application/json')) {
+                        try {
+                            const data = await response.clone().json();
+                            const detail = data?.detail;
+                            if (detail) {
+                                const detailStr = typeof detail === 'string' ? detail : JSON.stringify(detail);
+                                isJwtError = detailStr.includes('token') ||
+                                             detailStr.includes('Token') ||
+                                             detailStr.includes('access_token') ||
+                                             detailStr.includes('cookie') ||
+                                             detailStr.includes('Cookie') ||
+                                             detailStr.includes('auth') ||
+                                             detailStr.includes('Auth') ||
+                                             detailStr.includes('Field required');
+                            }
+                        } catch (e) {
+                            isJwtError = response.status === 401 || response.status === 422;
+                        }
+                    } else {
+                        isJwtError = response.status === 401 || response.status === 422;
+                    }
+
+                    if (isJwtError) {
+                        localStorage.removeItem('access_token');
+                        if (window.location.pathname !== '/login') {
+                            window.location.href = '/login';
+                        }
+                        throw new Error('JWT token expired or invalid');
+                    }
+                }
+                return response;
+            } catch (error) {
+                if (error.message === 'JWT token expired or invalid') {
+                    throw error;
+                }
+                console.error('Fetch error (page remains):', error);
+                return originalFetch.apply(this, args);
+            }
+        };
+
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+            themeIcon.textContent = '☀️';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            themeIcon.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        const protectedPaths = ['/agency', '/alerts', '/settings', '/support'];
+        const currentPath = window.location.pathname;
+        const isProtectedPage = protectedPaths.some(path => currentPath.startsWith(path));
+        const isAuthPage = currentPath === '/login' || currentPath === '/register';
+        
+        if (isProtectedPage) {
+            checkAuthStatus();
+        }
+    </script>
+</body>
+</html>

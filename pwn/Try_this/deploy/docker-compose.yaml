@@ -1,0 +1,18 @@
+name: try-this
+
+services:
+  try_this:
+    image: ubuntu:latest
+    platform: linux/amd64
+    container_name: try_this
+    ports:
+      - "41555:41555"
+    environment:
+      - FLAG=kevactf{g00d_j0b_t0_5t4rt}
+    volumes:
+      - ../src/try_this:/try_this:ro
+    command: ["/bin/bash", "-c", "apt update && apt install -y socat && socat TCP-LISTEN:41555,fork,reuseaddr TCP:127.0.0.1:41555"]
+    restart: unless-stopped
+    mem_limit: 256M
+    mem_reservation: 128M
+    cpus: '0.5'

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-form-centered">
+    <div class="auth-form">
+        <h2>Регистрация в Meridian Air</h2>
+    
+    <div class="error" id="formError" style="display: none;"></div>
+    
+    <form method="POST" action="/register" id="registerForm" novalidate>
+        <div class="form-group">
+            <input type="text" id="username" name="username" placeholder="Логин" required minlength="3" maxlength="30" autocomplete="off">
+            <div class="validation-messages" id="usernameErrors"></div>
+        </div>
+        <div class="form-group">
+            <input type="password" id="password" name="password" placeholder="Пароль" required minlength="8" maxlength="50">
+            <div class="validation-messages" id="passwordErrors"></div>
+        </div>
+        <button type="submit" id="submitBtn">Зарегистрироваться</button>
+    </form>
+    <p>Уже есть аккаунт? <a href="/login">Войти</a></p>
+    </div>
+</div>
+
+<script>
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const usernameErrors = document.getElementById('usernameErrors');
+    const passwordErrors = document.getElementById('passwordErrors');
+    const formError = document.getElementById('formError');
+    const submitBtn = document.getElementById('submitBtn');
+
+    const allowedPattern = /^[^ \u0400-\u04FF\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+$/u;
+    const emojiPattern = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E0}-\u{1F1FF}]/u;
+
+    function clearFormError() {
+        if (formError.style.display === 'block') {
+            formError.style.display = 'none';
+            formError.textContent = '';
+            usernameInput.classList.remove('invalid');
+            passwordInput.classList.remove('invalid');
+        }
+    }
+
+    function validateField(value, min, max, errorsEl, inputEl, isPassword = false) {
+        const errors = [];
+
+        if (!value || value.trim() === '') {
+            errors.push(`Поле обязательно для заполнения`);
+        } else {
+            if (value.includes(' ')) errors.push('Без пробелов');
+            if (/[\u0400-\u04FF]/.test(value)) errors.push('Без кириллицы');
+            if (emojiPattern.test(value)) errors.push('Без смайликов');
+            if (value.length < min || value.length > max) errors.push(`${min}–${max} символов`);
+            if (!allowedPattern.test(value)) errors.push('Латиница, цифры, спецсимволы');
+        }
+        
+        if (errors.length === 0) {
+            errorsEl.innerHTML = '';
+            errorsEl.classList.remove('show');
+            inputEl.classList.remove('invalid');
+            if (value.length > 0) inputEl.classList.add('valid');
+            else inputEl.classList.remove('valid');
+            return true;
+        } else {
+            errorsEl.innerHTML = errors.map(e => `<span class="validation-message">${e}</span>`).join('');
+            errorsEl.classList.add('show');
+            inputEl.classList.add('invalid');
+            inputEl.classList.remove('valid');
+            return false;
+        }
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const u = validateField(usernameInput.value, 3, 30, usernameErrors, usernameInput);
+        const p = validateField(passwordInput.value, 8, 50, passwordErrors, passwordInput);
+        if (!u || !p) return;
+
+        formError.style.display = 'none';
+        formError.textContent = '';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Регистрация...';
+
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch('/register', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            const contentType = response.headers.get("content-type");
+            let result;
+            if (contentType && contentType.includes("application/json")) {
+                result = await response.json();
+            } else {
+                result = await response.text();
+            }
+
+            if (response.ok) {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    window.location.href = '/login';
+                }
+            } else {
+                let errorMsg = "Произошла непредвиденная ошибка";
+
+                if (typeof result === 'object' && result.detail) {
+                    const detail = result.detail;
+                    if (response.status === 409 || (typeof detail === 'string' && detail.includes('already exists'))) {
+                        errorMsg = "Пользователь с таким логином уже существует";
+                    }
+                }
+
+                formError.textContent = errorMsg;
+                formError.style.display = 'block';
+                usernameInput.classList.add('invalid');
+            }
+        } catch (err) {
+            if (err.message !== 'JWT token expired or invalid') {
+                formError.textContent = "Ошибка соединения с сервером";
+                formError.style.display = 'block';
+            }
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Зарегистрироваться';
+        }
+    });
+
+    usernameInput.addEventListener('input', () => {
+        clearFormError();
+        validateField(usernameInput.value, 3, 30, usernameErrors, usernameInput);
+    });
+
+    usernameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            passwordInput.focus();
+        }
+    });
+
+    passwordInput.addEventListener('input', () => {
+        clearFormError();
+        validateField(passwordInput.value, 8, 50, passwordErrors, passwordInput);
+    });
+</script>
+{% endblock %}

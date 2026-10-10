@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+    {% set active_page = 'alerts' %}
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="alerts-header">
+            <h1>🔔 Журнал оповещений</h1>
+            <p>Служебные сообщения из внутренних отсеков Научного центра «Эхо-7»</p>
+        </div>
+
+        <div class="alerts-grid-container">
+            <div class="alerts-grid">
+                <div class="alert-card alert-info">
+                    <div class="alert-icon">📢</div>
+                    <div class="alert-content">
+                        <div class="alert-title">
+                            <h3>Перезапуск сектора наблюдения</h3>
+                            <span class="alert-date">24.03.2026</span>
+                        </div>
+                        <p>Во время стабилизации узла авторизации и внутренней admin-панели возможны кратковременные выходы из сессии. Повторный вход восстановит доступ к архиву.</p>
+                        <div class="alert-footer">
+                            <span class="alert-status">В процессе</span>
+                        </div>
+                    </div>
+                </div>
+
+            <div class="alert-card alert-success">
+                <div class="alert-icon">✅</div>
+                <div class="alert-content">
+                    <div class="alert-title">
+                        <h3>Обновление архивного модуля</h3>
+                        <span class="alert-date">18.03.2026</span>
+                    </div>
+                    <p>Архивный модуль обновлён до версии 7.1. Повышена устойчивость и исправлены обнаруженные ошибки синхронизации.</p>
+                    <div class="alert-footer">
+                        <span class="alert-status completed">Завершено</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-card alert-warning">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-content">
+                    <div class="alert-title">
+                        <h3>Плановая калибровка шлюза</h3>
+                        <span class="alert-date">14.03.2026</span>
+                    </div>
+                    <p>В ночь с 29 на 30 марта проводится обслуживание серверного шлюза. Возможны кратковременные задержки при загрузке страниц.</p>
+                    <div class="alert-footer">
+                        <span class="alert-status warning">Запланировано</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-card alert-neutral">
+                <div class="alert-icon">📋</div>
+                <div class="alert-content">
+                    <div class="alert-title">
+                        <h3>Протокол доступа исследователей</h3>
+                        <span class="alert-date">07.03.2026</span>
+                    </div>
+                    <p>Обновлены требования к паролям. Минимальная длина 8 символов. Рекомендуется обновить учётные данные в разделе настроек.</p>
+                    <div class="alert-footer">
+                        <span class="alert-status completed">Информация</span>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

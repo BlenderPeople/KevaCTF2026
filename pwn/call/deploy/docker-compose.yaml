@@ -1,0 +1,16 @@
+services:
+  call:
+    image: ubuntu:latest
+    platform: linux/amd64
+    container_name: call
+    ports:
+      - "41755:41755"
+    environment:
+      - FLAG=kevactf{He110_wh0_1s_th1s}
+    volumes:
+      - ../src/call:/call:ro
+    command: ["/bin/bash", "-c", "apt update && apt install -y socat && socat TCP-LISTEN:41755,fork,reuseaddr TCP:127.0.0.1:41755"]
+    restart: unless-stopped
+    mem_limit: 256M
+    mem_reservation: 128M
+    cpus: '0.5'

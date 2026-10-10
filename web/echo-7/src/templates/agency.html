@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+    {% set active_page = 'agency' %}
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content main-content-full">
+        <section class="hero-section hero-section-full hero-section-dark">
+            <div class="hero-text">
+                <h1>Добро пожаловать в Лабораторию X, {{ user.sub }}!</h1>
+                <p>Вы подключены к узлу «Эхо-7» - архивному центру учёных, который не должен был пережить последний инцидент. Собирайте досье, отслеживайте активность лабораторных смен и не игнорируйте странные записи в журнале: они появляются раньше, чем происходят события.</p>
+                <div class="hero-actions">
+                    <a href="/add/hr" class="btn btn-primary btn-lg">Добавить исследователя</a>
+                    <a href="/agents" class="btn btn-outline-primary btn-lg">Открыть архив</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-agents">142</div>
+                        <div class="stat-label">Досье в архиве</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-hired">89</div>
+                        <div class="stat-label">Стабильных экспериментов</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-label">Дежурный пост</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features-grid features-grid-full">
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Мониторинг</h3>
+                <p>Контроль активности отсеков и статусов экспериментов в реальном времени.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <h3>Протоколы доступа</h3>
+                <p>Изолированные уровни доступа и внутренние журналы для каждого научного сектора.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Быстрый отклик</h3>
+                <p>Оперативная обработка запросов даже в моменты аномальной сетевой активности.</p>
+            </div>
+        </section>
+
+        <section class="platform-activity platform-activity-full">
+            <h2>📈 Лента событий «Эхо-7»</h2>
+            <p class="section-subtitle">Последние записи из внутреннего журнала центра</p>
+            <div class="activity-scroll-container">
+                <div class="activity-list" id="activityList"></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    const activityTemplates = [
+        { icon: '➕', text: 'новых исследователей добавлено', range: [3, 15] },
+        { icon: '✅', text: 'протоколов успешно синхронизировано', range: [5, 20] },
+        { icon: '📋', text: 'досье экспериментов создано', range: [10, 30] },
+        { icon: '🔄', text: 'архивных записей перепроверено', range: [8, 25] },
+        { icon: '⚡', text: 'аномальных всплесков зафиксировано', range: [5, 18] },
+        { icon: '🧪', text: 'экспериментальных циклов завершено', range: [2, 12] },
+        { icon: '✉️', text: 'рапортов в дежурный пост отправлено', range: [15, 40] },
+        { icon: '🛰️', text: 'внешних сигналов классифицировано', range: [10, 35] },
+    ];
+
+    const timeAgo = ['2 мин назад', '5 мин назад', '12 мин назад', '18 мин назад', '25 мин назад', '32 мин назад', '1 час назад', '2 часа назад', '3 часа назад', '4 часа назад'];
+
+    function getRandomNumber(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateActivityItems() {
+        const items = [];
+        const shuffled = [...activityTemplates].sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, getRandomNumber(6, 10));
+        
+        selected.forEach((template, index) => {
+            const value = getRandomNumber(template.range[0], template.range[1]);
+            const time = timeAgo[index] || `${getRandomNumber(1, 5)} часов назад`;
+            items.push(`<div class="activity-item"><span class="activity-icon">${template.icon}</span><span class="activity-text"><strong>${value}</strong> ${template.text}</span><span class="activity-time">${time}</span></div>`);
+        });
+        
+        return items.join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const activityList = document.getElementById('activityList');
+        if (activityList) {
+            activityList.innerHTML = generateActivityItems();
+        }
+        animateValue('stat-agents', 0, getRandomNumber(120, 180), 1000);
+        animateValue('stat-hired', 0, getRandomNumber(70, 110), 1000);
+    });
+
+    function animateValue(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+        const range = end - start;
+        const minTimer = 50;
+        let stepTime = Math.abs(Math.floor(duration / range));
+        stepTime = Math.max(stepTime, minTimer);
+        let startTime = new Date().getTime();
+        let endTime = startTime + duration;
+        let timer;
+        
+        function run() {
+            let now = new Date().getTime();
+            let remaining = Math.max((endTime - now) / duration, 0);
+            let value = Math.round(end - (remaining * range));
+            obj.innerHTML = value;
+            if (value == end) clearInterval(timer);
+        }
+        timer = setInterval(run, stepTime);
+        run();
+    }
+</script>
+{% endblock %}

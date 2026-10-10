@@ -1,0 +1,4 @@
+Reminder:
+- fix typo in dashboard subtitle
+- check retention after weekend
+- move old png files out of attachments

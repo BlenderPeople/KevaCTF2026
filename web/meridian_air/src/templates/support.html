@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+    {% set active_page = 'support' %}
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="support-header">
+            <h1>💬 Служба поддержки</h1>
+            <p>Опишите вашу проблему, и мы свяжемся с вами в ближайшее время</p>
+        </div>
+
+        <div class="support-container">
+            <div class="support-info">
+                <h3>📞 Контакты</h3>
+                <ul>
+                    <li><strong>Email:</strong> support@meridian-air.local</li>
+                    <li><strong>Часы работы:</strong> Пн-Вс, круглосуточно</li>
+                    <li><strong>Время ответа:</strong> до 24 часов</li>
+                </ul>
+            </div>
+
+            <div class="support-form-card">
+                <form id="supportForm" method="POST">
+                    <div class="form-group-full">
+                        <label for="topic">Тема обращения *</label>
+                        <select id="topic" name="topic" required>
+                            <option value="">Выберите тему</option>
+                            <option value="login">Проблемы со входом</option>
+                            <option value="booking">Бронирование и билеты</option>
+                            <option value="billing">Вопросы оплаты</option>
+                            <option value="bug">Сообщить об ошибке</option>
+                            <option value="feature">Предложить функцию</option>
+                            <option value="other">Другое</option>
+                        </select>
+                        <div class="validation-messages" id="topicErrors"></div>
+                    </div>
+
+                    <div class="form-group-full">
+                        <label for="description">Описание проблемы *</label>
+                        <textarea id="description" name="description" rows="6" required placeholder="Опишите подробно, что произошло..." maxlength="2000"></textarea>
+                        <div class="validation-messages" id="descriptionErrors"></div>
+                        <div class="char-count"><span id="charCount">0</span> / 2000</div>
+                    </div>
+
+                    <div class="form-group-full">
+                        <label for="email">Email для связи</label>
+                        <input type="text" id="email" name="email" placeholder="your@email.com">
+                        <div class="validation-messages" id="emailErrors"></div>
+                        <small class="form-hint">Оставьте пустым, чтобы использовать email аккаунта</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-lg btn-primary" id="submitBtn">Отправить обращение</button>
+                    </div>
+                </form>
+
+                <div class="form-status" id="formStatus" style="display: none;"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const supportForm = document.getElementById('supportForm');
+    const topicSelect = document.getElementById('topic');
+    const descriptionTextarea = document.getElementById('description');
+    const emailInput = document.getElementById('email');
+    const submitBtn = document.getElementById('submitBtn');
+    const formStatus = document.getElementById('formStatus');
+    const charCount = document.getElementById('charCount');
+
+    const topicErrors = document.getElementById('topicErrors');
+    const descriptionErrors = document.getElementById('descriptionErrors');
+    const emailErrors = document.getElementById('emailErrors');
+
+    descriptionTextarea.addEventListener('input', function() {
+        charCount.textContent = this.value.length;
+        validateDescription();
+    });
+
+    topicSelect.addEventListener('change', function() {
+        validateTopic();
+    });
+
+    emailInput.addEventListener('input', function() {
+        validateEmail();
+    });
+
+    function validateTopic() {
+        if (!topicSelect.value || !topicSelect.value.trim()) {
+            topicErrors.innerHTML = '<span class="validation-message">Выберите тему обращения</span>';
+            topicErrors.classList.add('show');
+            topicSelect.classList.add('invalid');
+            topicSelect.classList.remove('valid');
+            return false;
+        } else {
+            topicErrors.innerHTML = '';
+            topicErrors.classList.remove('show');
+            topicSelect.classList.remove('invalid');
+            topicSelect.classList.add('valid');
+            return true;
+        }
+    }
+
+    function validateDescription() {
+        const value = descriptionTextarea.value.trim();
+        if (!value) {
+            descriptionErrors.innerHTML = '<span class="validation-message">Опишите вашу проблему</span>';
+            descriptionErrors.classList.add('show');
+            descriptionTextarea.classList.add('invalid');
+            descriptionTextarea.classList.remove('valid');
+            return false;
+        } else if (value.length < 10) {
+            descriptionErrors.innerHTML = '<span class="validation-message">Минимум 10 символов</span>';
+            descriptionErrors.classList.add('show');
+            descriptionTextarea.classList.add('invalid');
+            descriptionTextarea.classList.remove('valid');
+            return false;
+        } else {
+            descriptionErrors.innerHTML = '';
+            descriptionErrors.classList.remove('show');
+            descriptionTextarea.classList.remove('invalid');
+            descriptionTextarea.classList.add('valid');
+            return true;
+        }
+    }
+
+    function validateEmail() {
+        const value = emailInput.value.trim();
+        if (!value) {
+            emailErrors.innerHTML = '';
+            emailErrors.classList.remove('show');
+            emailInput.classList.remove('invalid');
+            return true;
+        }
+        if (value.length > 50) {
+            emailErrors.innerHTML = '<span class="validation-message">Максимум 50 символов</span>';
+            emailErrors.classList.add('show');
+            emailInput.classList.add('invalid');
+            emailInput.classList.remove('valid');
+            return false;
+        } else {
+            emailErrors.innerHTML = '';
+            emailErrors.classList.remove('show');
+            emailInput.classList.remove('invalid');
+            emailInput.classList.add('valid');
+            return true;
+        }
+    }
+
+    function validateForm() {
+        const isTopicValid = validateTopic();
+        const isDescriptionValid = validateDescription();
+        const isEmailValid = validateEmail();
+        return isTopicValid && isDescriptionValid && isEmailValid;
+    }
+
+    supportForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Отправка...';
+        formStatus.style.display = 'none';
+
+        const formData = {
+            topic: topicSelect.value,
+            description: descriptionTextarea.value.trim(),
+            email: emailInput.value.trim() || null
+        };
+
+        try {
+            const response = await fetch('/send/support/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                formStatus.className = 'form-status success';
+                formStatus.innerHTML = '✅ <strong>Обращение отправлено!</strong><br>Мы свяжемся с вами в течение 24 часов.';
+                formStatus.style.display = 'block';
+                supportForm.reset();
+                charCount.textContent = '0';
+            } else {
+                let errorMsg = 'Ошибка отправки';
+                if (result.detail) {
+                    errorMsg = result.detail;
+                }
+                formStatus.className = 'form-status error';
+                formStatus.innerHTML = '❌ ' + errorMsg;
+                formStatus.style.display = 'block';
+            }
+        } catch (err) {
+            formStatus.className = 'form-status error';
+            formStatus.innerHTML = '❌ Ошибка соединения с сервером';
+            formStatus.style.display = 'block';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Отправить обращение';
+        }
+    });
+
+    [topicSelect, descriptionTextarea, emailInput].forEach(field => {
+        field.addEventListener('input', function() {
+            if (this.classList.contains('invalid')) {
+                validateForm();
+            }
+        });
+    });
+</script>
+{% endblock %}

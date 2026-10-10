@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+    {% include "includes/sidebar.html" %}
+
+    <main class="main-content">
+        <div class="add-hr-header">
+            <h1>➕ Добавить исследователя</h1>
+            <p>Заполните досье нового участника научного центра</p>
+        </div>
+
+        <div class="add-hr-card">
+            <form id="addHrForm">
+                <div class="form-row">
+                    <div class="form-group-half">
+                        <label for="full_name">ФИО *</label>
+                        <input
+                            type="text"
+                            id="full_name"
+                            name="full_name"
+                            required
+                            maxlength="100"
+                            placeholder="Иванов Иван Иванович"
+                            autocomplete="off"
+                        >
+                        <div class="validation-messages" id="fullNameErrors"></div>
+                    </div>
+
+                    <div class="form-group-half">
+                        <label for="age">Возраст *</label>
+                        <input
+                            type="number"
+                            id="age"
+                            name="age"
+                            required
+                            min="1"
+                            max="150"
+                            placeholder="25"
+                        >
+                        <div class="validation-messages" id="ageErrors"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group-half">
+                        <label for="position">Специализация *</label>
+                        <input
+                            type="text"
+                            id="position"
+                            name="position"
+                            required
+                            maxlength="100"
+                            placeholder="Квантовый аналитик"
+                            autocomplete="off"
+                        >
+                        <div class="validation-messages" id="positionErrors"></div>
+                    </div>
+
+                    <div class="form-group-half">
+                        <label for="organization">Лабораторный сектор *</label>
+                        <input
+                            type="text"
+                            id="organization"
+                            name="organization"
+                            required
+                            maxlength="100"
+                            placeholder="Сектор «Эхо-7»"
+                            autocomplete="off"
+                        >
+                        <div class="validation-messages" id="organizationErrors"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group-half">
+                        <label for="departament">Отдел *</label>
+                        <input
+                            type="text"
+                            id="departament"
+                            name="departament"
+                            required
+                            maxlength="100"
+                            placeholder="Отдел аномальных полей"
+                            autocomplete="off"
+                        >
+                        <small class="form-hint">Например: Архивный блок, Отдел спектрального анализа</small>
+                        <div class="validation-messages" id="departamentErrors"></div>
+                    </div>
+
+                    <div class="form-group-half">
+                        <label for="create_date">Дата регистрации *</label>
+                        <input
+                            type="date"
+                            id="create_date"
+                            name="create_date"
+                            required
+                        >
+                        <div class="validation-messages" id="createDateErrors"></div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">Добавить исследователя</button>
+                </div>
+            </form>
+
+            <div class="form-status" id="formStatus" style="display: none;"></div>
+        </div>
+    </main>
+</div>
+
+<script>
+    function validateTextField(value, max, errorsEl, inputEl) {
+        const errors = [];
+
+        if (value.length > 0) {
+            if (value.length > max) {
+                errors.push(`Максимум ${max} символов`);
+            } else if (value.length === max) {
+                errors.push(`Достигнут лимит ${max} символов`);
+            }
+        }
+
+        if (errors.length === 0) {
+            errorsEl.innerHTML = '';
+            errorsEl.classList.remove('show');
+            inputEl.classList.remove('invalid');
+            if (value.length > 0) inputEl.classList.add('valid');
+            else inputEl.classList.remove('valid');
+            return true;
+        } else {
+            errorsEl.innerHTML = errors.map(e =>
+                `<span class="validation-message">${e}</span>`
+            ).join('');
+            errorsEl.classList.add('show');
+            inputEl.classList.add('invalid');
+            inputEl.classList.remove('valid');
+            return false;
+        }
+    }
+
+    function validateAge(value, errorsEl, inputEl) {
+        const errors = [];
+        const age = parseInt(value);
+
+        if (value.length > 0) {
+            if (isNaN(age) || age < 1 || age > 150) {
+                errors.push('От 1 до 150 лет');
+            }
+        }
+
+        if (errors.length === 0) {
+            errorsEl.innerHTML = '';
+            errorsEl.classList.remove('show');
+            inputEl.classList.remove('invalid');
+            if (value.length > 0) inputEl.classList.add('valid');
+            else inputEl.classList.remove('valid');
+            return true;
+        } else {
+            errorsEl.innerHTML = errors.map(e =>
+                `<span class="validation-message">${e}</span>`
+            ).join('');
+            errorsEl.classList.add('show');
+            inputEl.classList.add('invalid');
+            inputEl.classList.remove('valid');
+            return false;
+        }
+    }
+
+    function validateDate(value, errorsEl, inputEl) {
+        const errors = [];
+
+        if (value.length > 0) {
+            const date = new Date(value);
+            const today = new Date();
+            if (isNaN(date.getTime()) || date > today) {
+                errors.push('Некорректная или будущая дата');
+            }
+        }
+
+        if (errors.length === 0) {
+            errorsEl.innerHTML = '';
+            errorsEl.classList.remove('show');
+            inputEl.classList.remove('invalid');
+            if (value.length > 0) inputEl.classList.add('valid');
+            else inputEl.classList.remove('valid');
+            return true;
+        } else {
+            errorsEl.innerHTML = errors.map(e =>
+                `<span class="validation-message">${e}</span>`
+            ).join('');
+            errorsEl.classList.add('show');
+            inputEl.classList.add('invalid');
+            inputEl.classList.remove('valid');
+            return false;
+        }
+    }
+
+    const fields = {
+        full_name: {
+            input: document.getElementById('full_name'),
+            errors: document.getElementById('fullNameErrors'),
+            validate: (v) => validateTextField(v, 100, fields.full_name.errors, fields.full_name.input)
+        },
+        age: {
+            input: document.getElementById('age'),
+            errors: document.getElementById('ageErrors'),
+            validate: (v) => validateAge(v, fields.age.errors, fields.age.input)
+        },
+        position: {
+            input: document.getElementById('position'),
+            errors: document.getElementById('positionErrors'),
+            validate: (v) => validateTextField(v, 100, fields.position.errors, fields.position.input)
+        },
+        organization: {
+            input: document.getElementById('organization'),
+            errors: document.getElementById('organizationErrors'),
+            validate: (v) => validateTextField(v, 100, fields.organization.errors, fields.organization.input)
+        },
+        departament: {
+            input: document.getElementById('departament'),
+            errors: document.getElementById('departamentErrors'),
+            validate: (v) => validateTextField(v, 100, fields.departament.errors, fields.departament.input)
+        },
+        create_date: {
+            input: document.getElementById('create_date'),
+            errors: document.getElementById('createDateErrors'),
+            validate: (v) => validateDate(v, fields.create_date.errors, fields.create_date.input)
+        }
+    };
+
+    document.getElementById('create_date').valueAsDate = new Date();
+
+    Object.values(fields).forEach(field => {
+        field.input.addEventListener('input', () => field.validate(field.input.value));
+    });
+
+    document.getElementById('age').addEventListener('keydown', function(e) {
+        if (/[0-9]/.test(e.key) || 
+            e.key === 'Backspace' || 
+            e.key === 'Delete' || 
+            e.key === 'Tab' || 
+            e.key === 'Escape' || 
+            e.key === 'Enter' ||
+            e.key === 'ArrowLeft' || 
+            e.key === 'ArrowRight') {
+            return;
+        }
+        e.preventDefault();
+    });
+
+    document.getElementById('age').addEventListener('paste', function(e) {
+        const pastedData = e.clipboardData.getData('text');
+        if (!/^\d+$/.test(pastedData)) {
+            e.preventDefault();
+        }
+    });
+
+    document.getElementById('addHrForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        let isValid = true;
+        Object.values(fields).forEach(field => {
+            if (!field.validate(field.input.value)) isValid = false;
+        });
+
+        if (!isValid) return;
+
+        const submitBtn = document.getElementById('submitBtn');
+        const formStatus = document.getElementById('formStatus');
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Сохранение...';
+        formStatus.style.display = 'none';
+
+        const formData = {
+            full_name: fields.full_name.input.value.trim(),
+            age: parseInt(fields.age.input.value),
+            position: fields.position.input.value.trim(),
+            organization: fields.organization.input.value.trim(),
+            departament: fields.departament.input.value.trim(),
+            create_date: fields.create_date.input.value
+        };
+
+        try {
+            const response = await fetch('/add/hr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok) {
+                formStatus.className = 'form-status success';
+                formStatus.innerHTML = '✅ Исследователь добавлен в архив центра';
+                formStatus.style.display = 'block';
+                this.reset();
+                document.getElementById('create_date').valueAsDate = new Date();
+                Object.values(fields).forEach(field => {
+                    field.input.classList.remove('valid');
+                });
+            } else {
+                let errorMsg = 'Произошла непредвиденная ошибка';
+                if (result.detail) {
+                    errorMsg = result.detail;
+                }
+
+                formStatus.className = 'form-status error';
+                formStatus.innerHTML = '❌ ' + errorMsg;
+                formStatus.style.display = 'block';
+            }
+        } catch (err) {
+            formStatus.className = 'form-status error';
+            formStatus.innerHTML = '❌ Ошибка соединения с сервером';
+            formStatus.style.display = 'block';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Добавить исследователя';
+        }
+    });
+</script>
+{% endblock %}

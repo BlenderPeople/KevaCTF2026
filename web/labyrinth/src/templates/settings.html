@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="settings-container">
+    <div class="settings-header">
+        <h1>> Настройки терминала_</h1>
+        <p>Управление параметрами учётной записи</p>
+    </div>
+
+    {% if user.sub == "admin" %}
+    <div class="settings-grid">
+        <div class="settings-card" style="grid-column: 1 / -1;">
+            <div class="log-output" style="padding: 24px; min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                <div style="text-align: center;">
+                    <div class="log-line" style="font-size: 1.2rem; margin-bottom: 12px;">
+                        <span class="log-warn">⚠ ADMIN-УЧЁТНАЯ ЗАПИСЬ</span>
+                    </div>
+                    <div class="log-line" style="color: var(--text-dim);">
+                        Смена логина и пароля для администратора заблокирована.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="settings-grid">
+        <div class="settings-card">
+            <h3>🔑 Смена пароля</h3>
+            <form id="passwordForm">
+                <div class="form-group-full">
+                    <label for="newPassword">Новый пароль</label>
+                    <input type="password" id="newPassword" name="new_password" class="form-input"
+                           required minlength="5" maxlength="50" autocomplete="new-password"
+                           placeholder="новый пароль...">
+                    <div class="validation-messages" id="newPasswordErrors"></div>
+                </div>
+                <button type="submit" class="btn" id="passwordBtn">[ обновить пароль ]</button>
+            </form>
+            <div class="form-status" id="passwordStatus" style="display: none;"></div>
+        </div>
+
+        <div class="settings-card">
+            <h3>👤 Смена логина</h3>
+            <form id="loginForm">
+                <div class="form-group-full">
+                    <label for="currentLogin">Текущий логин</label>
+                    <input type="text" id="currentLogin" class="form-input disabled-input"
+                           value="{{ user.sub }}" disabled>
+                </div>
+                <div class="form-group-full">
+                    <label for="newLogin">Новый логин</label>
+                    <input type="text" id="newLogin" name="new_login" class="form-input"
+                           required minlength="5" maxlength="30" autocomplete="off"
+                           placeholder="новый логин...">
+                    <div class="validation-messages" id="newLoginErrors"></div>
+                    <span class="form-hint">5-30 символов, только латиница</span>
+                </div>
+                <button type="submit" class="btn" id="loginBtn">[ обновить логин ]</button>
+            </form>
+            <div class="form-status" id="loginStatus" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const allowedPattern = /^[^ \u0400-\u04FF\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+$/u;
+    const emojiPattern = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E0}-\u{1F1FF}]/u;
+
+    function validateField(value, min, max, errorsEl, inputEl) {
+        const errors = [];
+        if (value.length > 0) {
+            if (value.includes(' ')) errors.push('Без пробелов');
+            if (/[\u0400-\u04FF]/.test(value)) errors.push('Без кириллицы');
+            if (emojiPattern.test(value)) errors.push('Без смайликов');
+            if (value.length < min || value.length > max) errors.push(`${min}–${max} символов`);
+            if (!allowedPattern.test(value)) errors.push('Только латиница');
+        }
+        if (errors.length === 0) {
+            errorsEl.innerHTML = '';
+            errorsEl.classList.remove('show');
+            inputEl.classList.remove('invalid');
+            if (value.length > 0) inputEl.classList.add('valid');
+            else inputEl.classList.remove('valid');
+            return true;
+        }
+        errorsEl.innerHTML = errors.map(e => `<span class="validation-message">${e}</span>`).join('');
+        errorsEl.classList.add('show');
+        inputEl.classList.add('invalid');
+        inputEl.classList.remove('valid');
+        return false;
+    }
+
+    // Password form
+    const newPassword = document.getElementById('newPassword');
+    const newPasswordErrors = document.getElementById('newPasswordErrors');
+    const passwordForm = document.getElementById('passwordForm');
+    const passwordBtn = document.getElementById('passwordBtn');
+    const passwordStatus = document.getElementById('passwordStatus');
+
+    const passwordMinLength = 5;
+
+    newPassword.addEventListener('input', function() {
+        validateField(this.value, passwordMinLength, 50, newPasswordErrors, this);
+    });
+
+    passwordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!validateField(newPassword.value, passwordMinLength, 50, newPasswordErrors, newPassword)) return;
+
+        passwordBtn.disabled = true;
+        passwordBtn.textContent = '[ сохранение... ]';
+        passwordStatus.style.display = 'none';
+
+        try {
+            const response = await fetch('/upd/user', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_password: newPassword.value })
+            });
+
+            if (response.ok) {
+                passwordStatus.className = 'form-status form-success';
+                passwordStatus.innerHTML = '✅ Пароль обновлён. Переподключение...';
+                passwordStatus.style.display = 'block';
+                setTimeout(() => { window.location.href = '/logout'; }, 500);
+            } else {
+                const result = await response.json().catch(() => ({}));
+                passwordStatus.className = 'form-status form-error show';
+                passwordStatus.innerHTML = '❌ ' + (result.detail || 'Ошибка');
+                passwordStatus.style.display = 'block';
+            }
+        } catch (err) {
+            passwordStatus.className = 'form-status form-error show';
+            passwordStatus.innerHTML = '❌ Ошибка соединения';
+            passwordStatus.style.display = 'block';
+        } finally {
+            passwordBtn.disabled = false;
+            passwordBtn.textContent = '[ обновить пароль ]';
+        }
+    });
+
+    // Login form
+    const newLogin = document.getElementById('newLogin');
+    const newLoginErrors = document.getElementById('newLoginErrors');
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginStatus = document.getElementById('loginStatus');
+
+    newLogin.addEventListener('input', function() {
+        validateField(this.value, 5, 30, newLoginErrors, this);
+    });
+
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!validateField(newLogin.value, 5, 30, newLoginErrors, newLogin)) return;
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = '[ сохранение... ]';
+        loginStatus.style.display = 'none';
+
+        try {
+            const response = await fetch('/upd/user', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login: newLogin.value.trim() })
+            });
+
+            if (response.ok) {
+                loginStatus.className = 'form-status form-success';
+                loginStatus.innerHTML = '✅ Логин обновлён. Переподключение...';
+                loginStatus.style.display = 'block';
+                setTimeout(() => { window.location.href = '/logout'; }, 500);
+            } else {
+                const result = await response.json().catch(() => ({}));
+                loginStatus.className = 'form-status form-error show';
+                loginStatus.innerHTML = '❌ ' + (response.status === 409 ? 'Логин занят' : (result.detail || 'Ошибка'));
+                loginStatus.style.display = 'block';
+            }
+        } catch (err) {
+            loginStatus.className = 'form-status form-error show';
+            loginStatus.innerHTML = '❌ Ошибка соединения';
+            loginStatus.style.display = 'block';
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = '[ обновить логин ]';
+        }
+    });
+</script>
+    {% endif %}
+{% endblock %}

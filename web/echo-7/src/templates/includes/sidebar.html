@@ -1,0 +1,45 @@
+<aside class="sidebar sidebar-left">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">LX</div>
+        <span class="sidebar-logo-text">Echo-7 Archive</span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/agency" class="nav-item {% if active_page == 'agency' %}active{% endif %}">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
+        </a>
+        <a href="/add/hr" class="nav-item {% if active_page == 'add_hr' %}active{% endif %}">
+            <span class="nav-icon">➕</span>
+            <span class="nav-label">Добавить исследователя</span>
+        </a>
+        <a href="/agents" class="nav-item {% if active_page == 'agents' %}active{% endif %}">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Исследователи</span>
+        </a>
+        <a href="/alerts" class="nav-item {% if active_page == 'alerts' %}active{% endif %}">
+            <span class="nav-icon">🔔</span>
+            <span class="nav-label">Сводка аномалий</span>
+            <span class="nav-badge">1</span>
+        </a>
+        <a href="/settings" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Настройки</span>
+        </a>
+        <a href="/support" class="nav-item {% if active_page == 'support' %}active{% endif %}">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Поддержка</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-mini">
+            <div class="user-avatar">{{ user.sub[0].upper() }}</div>
+            <div class="user-info">
+                <div class="user-name">{{ user.sub }}</div>
+                <div class="user-role">{{ user.status }}</div>
+            </div>
+        </div>
+        <a href="/logout" class="logout-link">Выйти</a>
+    </div>
+</aside>

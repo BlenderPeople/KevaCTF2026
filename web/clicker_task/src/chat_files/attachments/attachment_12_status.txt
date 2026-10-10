@@ -1,0 +1,5 @@
+Status board:
+- collector: green
+- parser: green
+- dashboard: green
+- notifier: yellow

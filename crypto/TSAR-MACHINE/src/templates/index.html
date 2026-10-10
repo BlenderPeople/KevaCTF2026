@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИМПЕРСКАЯ МАШИНА МОД. VII</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="desk-surface">
+        <div class="typewriter-container">
+            
+            <!-- Brass Brand Plaque -->
+            <div class="brand-plate">
+                <span class="screw top-left"></span>
+                <span class="screw top-right"></span>
+                <span class="screw bottom-left"></span>
+                <span class="screw bottom-right"></span>
+                <div class="brand-text">ИМПЕРСКАЯ МАШИНА &bull; MOD. VII</div>
+                <div class="brand-sub">МИНИСТЕРСТВО ТЕЛЕГРАФИСТОВ &bull; 1943</div>
+            </div>
+
+            <!-- Paper Sheet / Platen Roller Carriage Area -->
+            <div class="carriage-assembly">
+                <div class="roller-knob left-knob"></div>
+                <div class="roller-knob right-knob"></div>
+                <div class="roller-bar"></div>
+                
+                <div class="paper-sheet" id="paperSheet">
+                    <div class="paper-margin-guide"></div>
+                    <div class="paper-header">
+                        <span>СТРОГО КОНФИДИЦИАЛЬНО</span>
+                        <span id="timestampDisplay">1943-09-22</span>
+                    </div>
+                    
+                    <div class="typed-content" id="typedOutput">
+                        <span class="ink-text" id="paperText"></span><span class="paper-cursor" id="paperCursor">_</span>
+                    </div>
+
+                    <div class="response-section" id="responseContainer" style="display: none;">
+                        <hr class="paper-divider">
+                        <div class="response-label">[МАШИНА СКАЗАЛА ТАК]:</div>
+                        <div class="response-text" id="responseText"></div>
+                    </div>
+                </div>
+
+                <!-- Paper bail roller -->
+                <div class="paper-bail">
+                    <div class="bail-roller"></div>
+                    <div class="bail-scale">
+                        <span>0</span><span>10</span><span>20</span><span>30</span><span>40</span><span>50</span><span>60</span><span>70</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typebars Striking Guide (Center Basket) -->
+            <div class="typebar-basket">
+                <div class="typebars-fan">
+                    <div class="strike-guide"></div>
+                </div>
+                <div class="ribbon-vibrator">
+                    <div class="ribbon-color-switch">
+                        <span class="color-dot black active" title="Standard Ink"></span>
+                        <span class="color-dot red" title="Red Carbon Ink"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Machine Actions & Status Bar -->
+            <div class="machine-controls">
+                <div class="status-lamp-group">
+                    <div class="lamp-container">
+                        <div class="lamp red" id="lampPower"></div>
+                        <span class="lamp-label">МОЩИ</span>
+                    </div>
+                    <div class="lamp-container">
+                        <div class="lamp amber" id="lampTransmit"></div>
+                        <span class="lamp-label">ДУМАТЬ</span>
+                    </div>
+                    <div class="lamp-container">
+                        <div class="lamp green" id="lampParity"></div>
+                        <span class="lamp-label">ВЕРНОСТЬ</span>
+                    </div>
+                </div>
+
+                <div class="lever-group">
+                    <button class="mechanical-btn lever-action" id="transmitBtn" title="Transmit to Cryptographic Core">
+                        <span class="btn-metal-edge"></span>
+                        <span class="btn-label">ДУМАТЬ / РАБОТАТЬ</span>
+                    </button>
+                    <button class="mechanical-btn lever-action clear-btn" id="feedNewPaperBtn" title="Insert New Blank Paper">
+                        <span class="btn-metal-edge"></span>
+                        <span class="btn-label">НОВЫЙ ВИТОК</span>
+                    </button>
+                    <a href="/hint?file=hint.jpg" target="_blank" class="mechanical-btn lever-action hint-link" title="Inspect Visual Schematics / Hint">
+                        <span class="btn-metal-edge"></span>
+                        <span class="btn-label">ЦАРЯ ХРАНИ</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mechanical Keyboard Deck -->
+            <div class="keyboard-casing">
+                <div class="keyboard-grid" id="keyboardGrid">
+                    <!-- Rows will be rendered by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Carriage Return Lever (Decoration + Sound) -->
+            <div class="carriage-lever" id="carriageLever" title="Carriage Return Lever">
+                <div class="lever-handle"></div>
+                <div class="lever-arm"></div>
+            </div>
+
+        </div>
+
+        <div class="desk-shadow"></div>
+    </div>
+
+    <!-- Audio synthesized via Web Audio API, no external audio files required! -->
+    <script src="/static/sound.js?v=3"></script>
+    <script src="/static/app.js?v=3"></script>
+</body>
+</html>

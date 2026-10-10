@@ -1,0 +1,17 @@
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://clicker_task_loki:3100
+    isDefault: true
+    editable: false
+
+  - name: Prometheus
+    uid: prom
+    type: prometheus
+    access: proxy
+    url: http://clicker_task_prometheus:9090
+    editable: false

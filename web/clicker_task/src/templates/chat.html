@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Internal Chat</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body class="chat-body">
+    <main class="chat-page">
+      <div class="chat-top">
+        <h1>Internal Chat</h1>
+        <div class="chat-meta">
+          <span class="status-pill">{{ messages|length }} messages loaded</span>
+          <a href="/" class="chat-link">Back to clicker</a>
+        </div>
+      </div>
+
+      <section class="attachments">
+        <h2>Attachments</h2>
+        <ul>
+          {% for item in attachments %}
+          <li><a href="/chat/file?name={{ item }}">{{ item }}</a></li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section class="messages" id="messages-list">
+        {% if messages %}
+          {% for msg in messages %}
+            <article class="message">
+              <header>
+                <strong>{{ msg.author }}</strong>
+                <time>{{ msg.time }}</time>
+              </header>
+              <p>{{ msg.text }}</p>
+            </article>
+          {% endfor %}
+        {% else %}
+          <p>No messages found.</p>
+        {% endif %}
+      </section>
+
+      <form method="post" action="/chat/message" class="post-box post-box-bottom">
+        <input name="nickname" maxlength="24" placeholder="Your nickname" autocomplete="off" required />
+        <input name="message" maxlength="240" placeholder="Write a message..." autocomplete="off" required />
+        <button type="submit">Post</button>
+      </form>
+    </main>
+
+    <script>
+      window.addEventListener("load", () => {
+        const messages = document.getElementById("messages-list");
+        if (messages) {
+          messages.scrollTop = messages.scrollHeight;
+        }
+      });
+    </script>
+  </body>
+</html>

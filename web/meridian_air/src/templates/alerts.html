@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+    {% set active_page = 'alerts' %}
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="alerts-header">
+            <h1>🔔 Уведомления</h1>
+            <p>Важные уведомления от Meridian Air</p>
+        </div>
+
+        <div class="alerts-grid-container">
+            <div class="alerts-grid">
+                <div class="alert-card alert-info">
+                    <div class="alert-icon">📢</div>
+                    <div class="alert-content">
+                        <div class="alert-title">
+                            <h3>Технические работы</h3>
+                            <span class="alert-date">12.03.2026</span>
+                        </div>
+                        <p>Уважаемые пользователи! Обращаем ваше внимание, что в связи с проведением технических работ в панели администратора возможны кратковременные выходы из аккаунта.</p>
+                        <div class="alert-footer">
+                            <span class="alert-status">В процессе</span>
+                        </div>
+                    </div>
+                </div>
+
+            <div class="alert-card alert-success">
+                <div class="alert-icon">✅</div>
+                <div class="alert-content">
+                    <div class="alert-title">
+                        <h3>Обновление системы</h3>
+                        <span class="alert-date">10.03.2026</span>
+                    </div>
+                    <p>Платформа обновлена до версии 2.4. Улучшена производительность и исправлены известные ошибки.</p>
+                    <div class="alert-footer">
+                        <span class="alert-status completed">Завершено</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-card alert-warning">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-content">
+                    <div class="alert-title">
+                        <h3>Плановое обслуживание</h3>
+                        <span class="alert-date">05.03.2026</span>
+                    </div>
+                    <p>Всем администраторам необходимо зайти в аккаунт с логином `admin`</p>
+                    <div class="alert-footer">
+                        <span class="alert-status warning">Запланировано</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-card alert-neutral">
+                <div class="alert-icon">📋</div>
+                <div class="alert-content">
+                    <div class="alert-title">
+                        <h3>Новые правила безопасности</h3>
+                        <span class="alert-date">01.03.2026</span>
+                    </div>
+                    <p>Обновлены требования к паролям. Минимальная длина увеличена до 8 символов. Рекомендуется сменить пароль в настройках аккаунта.</p>
+                    <div class="alert-footer">
+                        <span class="alert-status completed">Информация</span>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

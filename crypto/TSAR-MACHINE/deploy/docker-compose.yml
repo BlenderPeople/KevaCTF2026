@@ -1,0 +1,14 @@
+services:
+  tsar-machine:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "60606:60606"
+    environment:
+      PORT: "60606"
+      FLAG: "${FLAG:-kevactf{kruto!}}"
+      CTF_FLAG: "${CTF_FLAG:-kevactf{kruto!}}"
+    restart: unless-stopped
+    mem_limit: 256mb
+    cpus: 0.5

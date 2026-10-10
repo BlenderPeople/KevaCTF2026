@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="profile-layout">
+    <section class="support-card">
+        <div class="card-header">
+            <h2>> Профиль пользователя_</h2>
+            <p>Информация об учётной записи и токене доступа</p>
+        </div>
+        <div class="card-body">
+            <div class="terminal-widget">
+                <div class="widget-header">ДАННЫЕ АККАУНТА</div>
+                <div class="widget-body">
+                    <div class="stat-row">
+                        <span class="stat-label">Логин</span>
+                        <span class="stat-value">{{ user.sub }}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Роль</span>
+                        <span class="stat-value">{{ user.status }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="support-card">
+        <div class="card-header">
+            <h2>> Токен доступа_</h2>
+            <p>Используйте его для просмотра содержимого файлов</p>
+        </div>
+        <div class="card-body">
+            <div class="log-output token-output">
+                <div class="log-line">
+                    <span class="log-prefix">token:</span>
+                    <span class="{% if token %}log-success{% else %}log-error{% endif %}">{{ token or "Токен не найден в таблице доступа." }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+    {% set active_page = 'agents' %}
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="agents-header">
+            <h1>👥 Архив исследователей</h1>
+            <p>Управление карточками научного центра</p>
+        </div>
+
+        <div class="agents-container">
+            <div class="agents-toolbar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Поиск по имени, специализации, сектору...">
+                </div>
+                <div class="sort-box">
+                    <select id="sortSelect">
+                        <option value="date_desc">Сначала новые</option>
+                        <option value="date_asc">Сначала старые</option>
+                        <option value="name_asc">По имени (возрастание)</option>
+                        <option value="name_desc">По имени (убывание)</option>
+                    </select>
+                </div>
+                <div class="actions-box">
+                    <a href="/add/hr" class="btn btn-primary btn-lg">➕ Добавить исследователя</a>
+                </div>
+            </div>
+
+            <div class="agents-list" id="agentsList">
+                <div class="loading-state" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>Загрузка архива...</p>
+                </div>
+
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="empty-icon">📭</div>
+                    <h3>Архив пока пуст</h3>
+                    <p>Добавьте первого исследователя, чтобы инициализировать журнал</p>
+                    <a href="/add/hr" class="btn btn-primary btn-lg">➕ Добавить исследователя</a>
+                </div>
+
+                <div id="agentsGrid"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="modal-overlay" id="deleteModal" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>⚠️ Подтверждение удаления</h3>
+            <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Вы действительно хотите удалить карточку исследователя <strong id="deleteAgentName"></strong>?</p>
+            <p class="modal-hint">Это действие нельзя отменить</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="modalCancel">Отмена</button>
+            <button class="btn btn-danger" id="modalConfirm">Удалить</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    let agentsData = [];
+    let filteredAgents = [];
+    let deleteTargetId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadAgents();
+        setupEventListeners();
+    });
+
+    async function loadAgents() {
+        const loading = document.getElementById('loadingState');
+        const empty = document.getElementById('emptyState');
+        const grid = document.getElementById('agentsGrid');
+
+        loading.style.display = 'flex';
+        empty.style.display = 'none';
+        grid.innerHTML = '';
+
+        try {
+            const response = await fetch('/get/all/hrs', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.status === 401 || response.status === 403 || response.status === 422) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const result = await response.json();
+
+            if (response.ok) {
+                agentsData = result;
+                filteredAgents = [...agentsData];
+
+                if (filteredAgents.length === 0) {
+                    loading.style.display = 'none';
+                    empty.style.display = 'flex';
+                } else {
+                    loading.style.display = 'none';
+                    renderAgents(filteredAgents);
+                }
+            } else {
+                showError('Не удалось загрузить архив исследователей');
+                loading.style.display = 'none';
+            }
+        } catch (err) {
+            console.error('Load error:', err);
+            showError('Ошибка соединения с сервером');
+            loading.style.display = 'none';
+        }
+    }
+
+    function renderAgents(agents) {
+        const grid = document.getElementById('agentsGrid');
+        grid.innerHTML = agents.map(agent => `
+            <div class="agent-card" data-hr-id="${agent.hr_id}">
+                <div class="agent-card-header">
+                    <div class="agent-avatar">${agent.full_name[0].toUpperCase()}</div>
+                    <div class="agent-name-title">
+                        <h4 class="agent-name">${escapeHtml(agent.full_name)}</h4>
+                        <span class="agent-position">${escapeHtml(agent.position)}</span>
+                    </div>
+                </div>
+                
+                <div class="agent-card-body">
+                    <div class="agent-detail">
+                        <span class="detail-label">Возраст:</span>
+                        <span class="detail-value">${agent.age} лет</span>
+                    </div>
+                    <div class="agent-detail">
+                        <span class="detail-label">Сектор:</span>
+                        <span class="detail-value">${escapeHtml(agent.organization)}</span>
+                    </div>
+                    <div class="agent-detail">
+                        <span class="detail-label">Отдел:</span>
+                        <span class="detail-value">${escapeHtml(agent.departament)}</span>
+                    </div>
+                    <div class="agent-detail">
+                        <span class="detail-label">Дата:</span>
+                        <span class="detail-value">${formatDate(agent.create_date)}</span>
+                    </div>
+                </div>
+                
+                <div class="agent-card-footer">
+                    <button class="btn btn-sm btn-danger" onclick="confirmDelete(${agent.hr_id}, '${escapeHtml(agent.full_name)}')">
+                        🗑 Удалить
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function setupEventListeners() {
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            filteredAgents = agentsData.filter(agent => 
+                agent.full_name.toLowerCase().includes(query) ||
+                agent.position.toLowerCase().includes(query) ||
+                agent.organization.toLowerCase().includes(query) ||
+                agent.departament.toLowerCase().includes(query)
+            );
+            renderAgents(filteredAgents);
+        });
+
+        document.getElementById('sortSelect').addEventListener('change', (e) => {
+            const sort = e.target.value;
+            filteredAgents.sort((a, b) => {
+                switch(sort) {
+                    case 'date_asc': return new Date(a.create_date) - new Date(b.create_date);
+                    case 'date_desc': return new Date(b.create_date) - new Date(a.create_date);
+                    case 'name_asc': return a.full_name.localeCompare(b.full_name, 'ru');
+                    case 'name_desc': return b.full_name.localeCompare(a.full_name, 'ru');
+                    default: return 0;
+                }
+            });
+            renderAgents(filteredAgents);
+        });
+
+        document.getElementById('modalClose').onclick = closeModal;
+        document.getElementById('modalCancel').onclick = closeModal;
+        document.getElementById('deleteModal').onclick = (e) => {
+            if (e.target.id === 'deleteModal') closeModal();
+        };
+        document.getElementById('modalConfirm').onclick = handleDelete;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    }
+
+    function confirmDelete(hrId, name) {
+        deleteTargetId = hrId;
+        document.getElementById('deleteAgentName').textContent = name;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+        deleteTargetId = null;
+    }
+
+    async function handleDelete() {
+        if (!deleteTargetId) return;
+
+        const btn = document.getElementById('modalConfirm');
+        btn.disabled = true;
+        btn.textContent = 'Удаление...';
+
+        try {
+            const response = await fetch(`/del/hr/${deleteTargetId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.status === 401 || response.status === 403 || response.status === 422) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const result = await response.json();
+
+            const skipHeader = response.headers.get('skip');
+
+            if (response.status === 404 && skipHeader === 'hr_not_found') {
+                showError('Исследователь не найден');
+            } else if (response.status === 200 && result.status === 'OK') {
+                showSuccess('Карточка исследователя удалена');
+                agentsData = agentsData.filter(a => a.hr_id !== deleteTargetId);
+                filteredAgents = filteredAgents.filter(a => a.hr_id !== deleteTargetId);
+                renderAgents(filteredAgents);
+
+                if (filteredAgents.length === 0) {
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'flex';
+                }
+            } else {
+                showError(result.detail || 'Ошибка при удалении');
+            }
+        } catch (err) {
+            console.error('Delete error:', err);
+            showError('Ошибка соединения с сервером');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Удалить';
+            closeModal();
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('ru-RU', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
+
+    function showSuccess(message) {
+        showToast(`✅ ${message}`, 'success');
+    }
+
+    function showError(message) {
+        showToast(`❌ ${message}`, 'error');
+    }
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => toast.classList.add('show'), 10);
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+</script>
+{% endblock %}

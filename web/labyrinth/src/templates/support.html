@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="support-container">
+    <div class="support-card">
+        <div class="card-header">
+            <h2>> Запрос помощи_</h2>
+            <p>Отправьте сообщение в службу поддержки лабиринта</p>
+        </div>
+        <div class="card-body">
+            <form id="supportForm" method="POST">
+                <div class="form-group-full">
+                    <label for="topic">Тема обращения</label>
+                    <select id="topic" name="topic" class="form-input" required>
+                        <option value="">Выберите тему...</option>
+                        <option value="lost">Потерялся в лабиринте</option>
+                        <option value="terminal">Проблемы с терминалом</option>
+                        <option value="files">Нет доступа к файлам</option>
+                        <option value="alice">Странные сообщения от Alice</option>
+                        <option value="bug">Аномалия в системе</option>
+                        <option value="other">Другое</option>
+                    </select>
+                    <div class="validation-messages" id="topicErrors"></div>
+                </div>
+
+                <div class="form-group-full">
+                    <label for="description">Описание проблемы</label>
+                    <textarea id="description" name="description" class="form-input" rows="6"
+                              required placeholder="Опишите, что произошло..." maxlength="2000"></textarea>
+                    <div class="validation-messages" id="descriptionErrors"></div>
+                    <div class="char-count"><span id="charCount">0</span> / 2000</div>
+                </div>
+
+                <div class="form-group-full">
+                    <label for="email">Обратный канал связи</label>
+                    <input type="text" id="email" name="email" class="form-input"
+                           placeholder="your@email.com">
+                    <div class="validation-messages" id="emailErrors"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn" id="submitBtn">[ отправить запрос ]</button>
+                </div>
+            </form>
+
+            <div class="form-status" id="formStatus" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const supportForm = document.getElementById('supportForm');
+    const topicSelect = document.getElementById('topic');
+    const descriptionTextarea = document.getElementById('description');
+    const emailInput = document.getElementById('email');
+    const submitBtn = document.getElementById('submitBtn');
+    const formStatus = document.getElementById('formStatus');
+    const charCount = document.getElementById('charCount');
+
+    const topicErrors = document.getElementById('topicErrors');
+    const descriptionErrors = document.getElementById('descriptionErrors');
+    const emailErrors = document.getElementById('emailErrors');
+
+    descriptionTextarea.addEventListener('input', function() {
+        charCount.textContent = this.value.length;
+        if (this.classList.contains('invalid')) validateDescription();
+    });
+    topicSelect.addEventListener('change', validateTopic);
+    emailInput.addEventListener('input', validateEmail);
+
+    function validateTopic() {
+        if (!topicSelect.value || !topicSelect.value.trim()) {
+            topicErrors.innerHTML = '<span class="validation-message">Выберите тему</span>';
+            topicErrors.classList.add('show');
+            topicSelect.classList.add('invalid');
+            topicSelect.classList.remove('valid');
+            return false;
+        }
+        topicErrors.innerHTML = '';
+        topicErrors.classList.remove('show');
+        topicSelect.classList.remove('invalid');
+        topicSelect.classList.add('valid');
+        return true;
+    }
+
+    function validateDescription() {
+        const value = descriptionTextarea.value.trim();
+        if (!value) {
+            descriptionErrors.innerHTML = '<span class="validation-message">Опишите проблему</span>';
+            descriptionErrors.classList.add('show');
+            descriptionTextarea.classList.add('invalid');
+            descriptionTextarea.classList.remove('valid');
+            return false;
+        } else if (value.length < 10) {
+            descriptionErrors.innerHTML = '<span class="validation-message">Минимум 10 символов</span>';
+            descriptionErrors.classList.add('show');
+            descriptionTextarea.classList.add('invalid');
+            descriptionTextarea.classList.remove('valid');
+            return false;
+        }
+        descriptionErrors.innerHTML = '';
+        descriptionErrors.classList.remove('show');
+        descriptionTextarea.classList.remove('invalid');
+        descriptionTextarea.classList.add('valid');
+        return true;
+    }
+
+    function validateEmail() {
+        const value = emailInput.value.trim();
+        if (!value) {
+            emailErrors.innerHTML = '';
+            emailErrors.classList.remove('show');
+            emailInput.classList.remove('invalid');
+            return true;
+        }
+        if (value.length > 50) {
+            emailErrors.innerHTML = '<span class="validation-message">Максимум 50 символов</span>';
+            emailErrors.classList.add('show');
+            emailInput.classList.add('invalid');
+            return false;
+        }
+        emailErrors.innerHTML = '';
+        emailErrors.classList.remove('show');
+        return true;
+    }
+
+    supportForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!validateTopic() || !validateDescription() || !validateEmail()) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = '[ отправка... ]';
+        formStatus.style.display = 'none';
+
+        const formData = {
+            topic: topicSelect.value,
+            description: descriptionTextarea.value.trim(),
+            email: emailInput.value.trim() || null
+        };
+
+        try {
+            const response = await fetch('/send/support/message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                formStatus.className = 'form-status form-success';
+                formStatus.innerHTML = 'Запрос отправлен. Ожидайте...';
+                formStatus.style.display = 'block';
+                supportForm.reset();
+                charCount.textContent = '0';
+            } else {
+                formStatus.className = 'form-status form-error show';
+                formStatus.innerHTML = result.detail || 'Ошибка отправки';
+                formStatus.style.display = 'block';
+            }
+        } catch (err) {
+            formStatus.className = 'form-status form-error show';
+            formStatus.innerHTML = 'Ошибка соединения';
+            formStatus.style.display = 'block';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '[ отправить запрос ]';
+        }
+    });
+</script>
+{% endblock %}

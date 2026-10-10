@@ -1,0 +1,9 @@
+{
+  "service": "clicker",
+  "version": "0.8.3",
+  "notes": [
+    "temporary chat file endpoint remains enabled",
+    "metrics endpoint deferred",
+    "auth deferred"
+  ]
+}

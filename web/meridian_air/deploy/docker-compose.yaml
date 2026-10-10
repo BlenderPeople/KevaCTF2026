@@ -1,0 +1,41 @@
+name: meridian-air
+
+services:
+  backend-air:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    ports:
+      - 62222:57894
+    environment:
+      DB_URL: postgresql+asyncpg://aebc315cadd15868df9430cd608a:08a26589037a609a257c87c936de1cb842c857e@postgres-air:5432/AirplaneDB
+      JWT_KEY: 4c2af0be3e42e0778e275ecf6af95e475e069cb37f06ad4badc51fb42fd48158
+      FLAG: kevactf{N0w_Th33_A1rlL1n33_1s_1n_y0ur_hand$$$$}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+    depends_on:
+      postgres-air:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 512mb
+    cpus: 0.5
+  postgres-air:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: AirplaneDB
+      POSTGRES_USER: aebc315cadd15868df9430cd608a
+      POSTGRES_PASSWORD: 08a26589037a609a257c87c936de1cb842c857e
+    volumes:
+      - postgres_data_1:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aebc315cadd15868df9430cd608a -d AirplaneDB"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    mem_limit: 1024mb
+    cpus: 1.0
+
+volumes:
+  postgres_data_1:
